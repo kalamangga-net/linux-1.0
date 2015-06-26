@@ -155,9 +155,12 @@ void * kmalloc (size_t size, int priority)
 
 /* Sanity check... */
 	if (intr_count && priority != GFP_ATOMIC) {
-		printk("kmalloc called nonatomically from interrupt %08lx\n",
-			((unsigned long *)&size)[-1]);
-		priority = GFP_ATOMIC;
+		static int count = 0;
+		if (++count < 5) {
+			printk("kmalloc called nonatomically from interrupt %08lx\n",
+				((unsigned long *)&size)[-1]);
+			priority = GFP_ATOMIC;
+		}
 	}
 if (size > MAX_KMALLOC_K * 1024) 
      {
@@ -214,11 +217,14 @@ while (tries --)
 
     /* This can be done with ints on: This is private to this invocation */
     page = (struct page_descriptor *) __get_free_page (priority & GFP_LEVEL_MASK);
-    if (!page) 
-        {
-        printk ("Couldn't get a free page.....\n");
+    if (!page) {
+        static unsigned long last = 0;
+        if (last + 10*HZ < jiffies) {
+        	last = jiffies;
+	        printk ("Couldn't get a free page.....\n");
+	}
         return NULL;
-        }
+    }
 #if 0
     printk ("Got page %08x to use for %d byte mallocs....",(long)page,sz);
 #endif

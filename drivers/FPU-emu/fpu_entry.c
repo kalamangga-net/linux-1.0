@@ -279,6 +279,8 @@ do_another_FPU_instruction:
 	      }
 	  }
 
+	  FPU_EIP = FPU_ORIG_EIP;	/* Point to current FPU instruction. */
+
 	  RE_ENTRANT_CHECK_OFF;
 	  current->tss.trap_no = 16;
 	  current->tss.error_code = 0;

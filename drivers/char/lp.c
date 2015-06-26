@@ -170,6 +170,7 @@ static int lp_write_interrupt(struct inode * inode, struct file * file, char * b
 				current->timeout = jiffies + LP_TIMEOUT_INTERRUPT;
 				interruptible_sleep_on(&lp->lp_wait_q);
 				outb_p((LP_PSELECP|LP_PINITP), (LP_C(minor)));
+				sti();
 				if (current->signal & ~current->blocked) {
 					if (total_bytes_written + bytes_written)
 						return total_bytes_written + bytes_written;

@@ -595,9 +595,12 @@ unsigned long __get_free_page(int priority)
 	   Is this code reentrant? */
 
 	if (intr_count && priority != GFP_ATOMIC) {
-		printk("gfp called nonatomically from interrupt %08lx\n",
-			((unsigned long *)&priority)[-1]);
-		priority = GFP_ATOMIC;
+		static int count = 0;
+		if (++count < 5) {
+			printk("gfp called nonatomically from interrupt %08lx\n",
+				((unsigned long *)&priority)[-1]);
+			priority = GFP_ATOMIC;
+		}
 	}
 	save_flags(flag);
 repeat:

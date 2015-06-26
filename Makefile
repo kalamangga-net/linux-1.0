@@ -1,6 +1,6 @@
 VERSION = 1
 PATCHLEVEL = 0
-ALPHA =
+SUBLEVEL = 1
 
 all:	Version zImage
 
@@ -128,7 +128,7 @@ tools/./version.h: tools/version.h
 
 tools/version.h: $(CONFIGURE) Makefile
 	@./makever.sh
-	@echo \#define UTS_RELEASE \"$(VERSION).$(PATCHLEVEL)$(ALPHA)\" > tools/version.h
+	@echo \#define UTS_RELEASE \"$(VERSION).$(PATCHLEVEL).$(SUBLEVEL)\" > tools/version.h
 	@echo \#define UTS_VERSION \"\#`cat .version` `date`\" >> tools/version.h
 	@echo \#define LINUX_COMPILE_TIME \"`date +%T`\" >> tools/version.h
 	@echo \#define LINUX_COMPILE_BY \"`whoami`\" >> tools/version.h

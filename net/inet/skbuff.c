@@ -429,9 +429,12 @@ struct sk_buff *alloc_skb(unsigned int size,int priority)
 	extern unsigned long intr_count;
 
 	if (intr_count && priority != GFP_ATOMIC) {
-		printk("alloc_skb called nonatomically from interrupt %08lx\n",
-			((unsigned long *)&size)[-1]);
-		priority = GFP_ATOMIC;
+		static int count = 0;
+		if (++count < 5) {
+			printk("alloc_skb called nonatomically from interrupt %08lx\n",
+				((unsigned long *)&size)[-1]);
+			priority = GFP_ATOMIC;
+		}
 	}
 	skb=(struct sk_buff *)kmalloc(size,priority);
 	if(skb==NULL)

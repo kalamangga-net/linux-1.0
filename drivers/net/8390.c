@@ -145,14 +145,14 @@ static int ei_start_xmit(struct sk_buff *skb, struct device *dev)
 			return 1;
 		}
 		isr = inb(e8390_base+EN0_ISR);
-		printk("%s: transmit timed out, TX status %#2x, ISR %#2x.\n",
+		printk(KERN_DEBUG "%s: transmit timed out, TX status %#2x, ISR %#2x.\n",
 			   dev->name, txsr, isr);
 		/* Does the 8390 thinks it has posted an interrupt? */
 		if (isr)
-			printk("%s: Possible IRQ conflict on IRQ%d?\n", dev->name, dev->irq);
+			printk(KERN_DEBUG "%s: Possible IRQ conflict on IRQ%d?\n", dev->name, dev->irq);
 		else {
 			/* The 8390 probably hasn't gotten on the cable yet. */
-			printk("%s: Possible network cable problem?\n", dev->name);
+			printk(KERN_DEBUG "%s: Possible network cable problem?\n", dev->name);
 			ei_local->interface_num ^= 1; 	/* Try a different xcvr.  */
 		}
 		/* Try to restart the card.  Perhaps the user has fixed something. */
@@ -453,7 +453,7 @@ static void ei_receive(struct device *dev)
 			
 			skb = alloc_skb(sksize, GFP_ATOMIC);
 			if (skb == NULL) {
-				if (ei_debug)
+				if (ei_debug > 1)
 					printk("%s: Couldn't allocate a sk_buff of size %d.\n",
 						   dev->name, sksize);
 				ei_local->stat.rx_dropped++;
@@ -513,7 +513,7 @@ static void ei_rx_overrun(struct device *dev)
     /* We should already be stopped and in page0.  Remove after testing. */
     outb_p(E8390_NODMA+E8390_PAGE0+E8390_STOP, e8390_base+E8390_CMD);
     
-    if (ei_debug)
+    if (ei_debug > 1)
 		printk("%s: Receiver overrun.\n", dev->name);
     ei_local->stat.rx_over_errors++;
     

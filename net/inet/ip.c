@@ -10,6 +10,7 @@
  * Authors:	Ross Biro, <bir7@leland.Stanford.Edu>
  *		Fred N. van Kempen, <waltje@uWalt.NL.Mugnet.ORG>
  *		Donald Becker, <becker@super.org>
+ *		Alan Cox, <gw4pts@gw4pts.ampr.org>
  *
  * Fixes:
  *		Alan Cox	:	Commented a couple of minor bits of surplus code
@@ -40,6 +41,9 @@
  *		Alan Cox	:	Silly ip bug when an overlength
  *					fragment turns up. Now frees the
  *					queue.
+ *		Linus Torvalds/ :	Memory leakage on fragmentation	
+ *		Alan Cox	:	handling.
+ *		Gerhard Koerting:	Forwarding uses IP priority hints
  *
  * To Fix:
  *		IP option processing is mostly not needed. ip_forward needs to know about routing rules
@@ -831,9 +835,8 @@ static struct sk_buff *ip_defrag(struct iphdr *iph, struct sk_buff *skb, struct 
    	offset = ntohs(iph->frag_off);
    	flags = offset & ~IP_OFFSET;
    	offset &= IP_OFFSET;
-   	if (((flags & IP_MF) == 0) && (offset == 0)) 
-   	{
- 		if (qp != NULL) 
+   	if (((flags & IP_MF) == 0) && (offset == 0)) {
+		if (qp != NULL)
  			ip_free(qp);	/* Huh? How could this exist?? */
  		return(skb);
    	}
@@ -844,20 +847,20 @@ static struct sk_buff *ip_defrag(struct iphdr *iph, struct sk_buff *skb, struct 
    	 * as we still are receiving fragments.  Otherwise, create a fresh
     	 * queue entry.
     	 */
-   	if (qp != NULL) 
-   	{
- 		del_timer(&qp->timer);
- 		qp->timer.expires = IP_FRAG_TIME;	/* about 30 seconds	*/
- 		qp->timer.data = (unsigned long) qp;	/* pointer to queue	*/
- 		qp->timer.function = ip_expire;		/* expire function	*/
- 		add_timer(&qp->timer);
-   	} 
-   	else 
-   	{
- 		if ((qp = ip_create(skb, iph, dev)) == NULL) 
- 			return(NULL);
-   	}
- 
+	if (qp != NULL) {
+		del_timer(&qp->timer);
+		qp->timer.expires = IP_FRAG_TIME;	/* about 30 seconds */
+		qp->timer.data = (unsigned long) qp;	/* pointer to queue */
+		qp->timer.function = ip_expire;		/* expire function */
+		add_timer(&qp->timer);
+	} else {
+		if ((qp = ip_create(skb, iph, dev)) == NULL) {
+			skb->sk = NULL;
+			kfree_skb(skb, FREE_READ);
+			return NULL;
+		}
+	}
+
    	/* Determine the position of this fragment. */
    	ihl = (iph->ihl * sizeof(unsigned long));
    	end = offset + ntohs(iph->tot_len) - ihl;
@@ -924,6 +927,7 @@ static struct sk_buff *ip_defrag(struct iphdr *iph, struct sk_buff *skb, struct 
  			if (tfp->next != NULL) 
  				next->next->prev = next->prev;
  			
+ 			kfree_skb(next->skb, FREE_READ);
  			kfree_s(next, sizeof(struct ipfrag));
  		}
  		DPRINTF((DBG_IP, "IP: defrag: fixed high overlap %d bytes\n", i));
@@ -932,6 +936,11 @@ static struct sk_buff *ip_defrag(struct iphdr *iph, struct sk_buff *skb, struct 
    	/* Insert this fragment in the chain of fragments. */
    	tfp = NULL;
    	tfp = ip_frag_create(offset, end, skb, ptr);
+   	if (!tfp) {
+   		skb->sk = NULL;
+   		kfree_skb(skb, FREE_READ);
+   		return NULL;
+   	}
    	tfp->prev = prev;
    	tfp->next = next;
    	if (prev != NULL) 
@@ -1000,11 +1009,6 @@ static struct sk_buff *ip_defrag(struct iphdr *iph, struct sk_buff *skb, struct 
  			dev->name, dev->mtu, left, in_ntoa(iph->saddr)));
  		DPRINTF((DBG_IP, " DST=%s\n", in_ntoa(iph->daddr)));
  
- 		/*
- 		 * FIXME:
- 		 * We should send an ICMP warning message here!
- 		 */
- 		 
  		icmp_send(skb,ICMP_DEST_UNREACH, ICMP_FRAG_NEEDED, dev); 
  		return;
    	}
@@ -1017,15 +1021,6 @@ static struct sk_buff *ip_defrag(struct iphdr *iph, struct sk_buff *skb, struct 
    	while(left > 0) 
    	{
  		len = left;
-#ifdef OLD 		
- 		if (len+8 > mtu) 
- 			len = (dev->mtu - hlen - 8);
- 		if ((left - len) >= 8) 
- 		{
- 			len /= 8;
- 			len *= 8;
- 		}
-#else
 		/* IF: it doesn't fit, use 'mtu' - the data space left */
 		if (len > mtu)
 			len = mtu;
@@ -1036,7 +1031,6 @@ static struct sk_buff *ip_defrag(struct iphdr *iph, struct sk_buff *skb, struct 
 			len/=8;
 			len*=8;
 		}
-#endif		 		
  		DPRINTF((DBG_IP,"IP: frag: creating fragment of %d bytes (%d total)\n",
  							len, len + hlen));
  
@@ -1199,7 +1193,14 @@ ip_forward(struct sk_buff *skb, struct device *dev, int is_frag)
 		kfree_skb(skb2,FREE_WRITE);
 	}
 	else
-		dev2->queue_xmit(skb2, dev2, SOPRI_NORMAL);
+	{
+		if(iph->tos & IPTOS_LOWDELAY)
+			dev2->queue_xmit(skb2, dev2, SOPRI_INTERACTIVE);
+		if(iph->tos & IPTOS_THROUGHPUT)
+			dev2->queue_xmit(skb2, dev2, SOPRI_BACKGROUND);
+		else
+			dev2->queue_xmit(skb2, dev2, SOPRI_NORMAL);
+	}
   }
 }
 

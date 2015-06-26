@@ -75,7 +75,7 @@ static int check(int flag, select_table * wait, struct file * file)
 	return 0;
 }
 
-int do_select(int n, fd_set *in, fd_set *out, fd_set *ex,
+static int do_select(int n, fd_set *in, fd_set *out, fd_set *ex,
 	fd_set *res_in, fd_set *res_out, fd_set *res_ex)
 {
 	int count;
