@@ -1,0 +1,78 @@
+
+(2nd attempt. 1st bounced.)
+Hi again
+
+About my previous mail: I've looked into parallel.asm, and I'm
+rather confused. Looks like the code agrees with you, but not
+the protocol description preceeding it?? I got to look more
+careful, but it wont be for a while (approx a week).
+
+>From plip.c (v0.04):
+
+>make one yourself.  The wiring is:
+>    INIT        16 - 16         SLCTIN  17 - 17
+>    GROUND      25 - 25
+>    D0->ERROR   2 - 15          15 - 2
+
+I saw you removed 1 and 14 from the cable description, but not
+16 and 17. Why is that?
+
+Have been succesful in getting parallel.com working (the Messy-Loss
+software). Using the pksend on the sender and pkall/pkwatch/whatnot
+gives me a hung receiver. (The cable works, I've tried unet11, a DOS
+cheap-net prog.)
+
+Using PLIP v0.03 and trying to ping the other end gives
+  88 timeout 88 timeout....(more) 2386 bogous packet size, dropped
+on the receiver, and on the sender lots of timeout, but of
+course I don't know how much is supposed to work.
+
+The following to something I wrote when I should have gone to bed a
+long time ago. Use it for whatever you like, or dump it in the bin. ;^)
+
+/Tommy
+-----
+Becker [& Co] provdly presents PLIP
+
+What is PLIP?
+=============
+
+PLIP is Parallel Line IP, that is, the transportation of IP packages
+over a parallel port. In the case of a PC, the obvious choice is the
+printer port.  PLIP is a non-standard, but [can use] uses the standard
+LapLink null-printer cable [can also work in turbo mode, with a PLIP
+cable]. [The protocol used to pack IP packages, is a simple one
+initiated by Crynwr.]
+
+Advantages of PLIP
+==================
+
+It's cheap, it's availble everywhere, and it's easy.
+
+The PLIP cable is all that's needed to connect two Linux boxes, and it
+can be build for very bucks.
+
+Connecting two Linux boxes takes only a seconds decision and a few
+minutes work, no need to search for a [supported] netcard. This might
+even be especially important in the case of notebooks, where netcard
+are not easily availble.
+
+Not requiring a netcard also means that apart from connecting the
+cables, everything else is software configuration [which in principle
+could be made very easy.]
+
+Disadvantages of PLIP
+=====================
+
+Doesn't work over a modem, like SLIP and PPP. Limited range, 15 m.
+Can only be used to connect three (?) Linux boxes. Doesn't connect to
+an exiting ethernet. Isn't standard (not even de facto standard, like
+SLIP).
+
+Performens
+==========
+
+PLIP easily outperforms ethernet cards....(ups, I was dreaming, but
+it *is* getting late. EOB)
+
+

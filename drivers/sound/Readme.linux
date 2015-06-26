@@ -1,0 +1,253 @@
+Sound Driver version 2.4 for Linux
+----------------------------------
+
+NOTE!	The sound driver is now a part of the Linux kernel distribution.
+	Check that your kernel doesn't have more recent version than this
+	when installing a separately distributed sound driver. The
+	version number of this driver is defined in the makefile.
+
+Installation
+------------
+
+- Since this driver is a part of the Linux kernel distribution, no
+  special steps are required to build the driver itself.
+
+- In case you are installing a separately distributed sound driver,
+  you have to do some additional steps.
+  - Remove all files from the linux/drivers/sound. Old files could
+    sometimes cause trouble.
+  - cd linux/drivers.
+  - gunzip -c snd-driv-X.Y.tar.gz|tar xvf -
+  - cd ./sound
+  - cp soundcard.h ultrasound.h /usr/include/linux
+
+- To build the device files for this driver, you need to run the enclosed 
+  shell script (at the end of this file).
+
+- Create /usr/include/sys/soundcard.h whic contains just a line:
+#include <linux/soundcard.h>
+
+- Create /usr/include/sys/ultrasound.h whic contains just a line:
+#include <linux/ultrasound.h>
+
+Boot time configuration (using lilo)
+------------------------------------
+
+This version of the sound driver has capability to accept the configuration
+parameters from the boot loader (for example lilo). By default the 
+driver is booted using the parameters given before compiling the driver
+('make config' or 'make soundconf'). If the kernel is booted using lilo and
+the boot command is given manually, it's possible to give the configuration
+parameters on the command line. Just hold down the <Alt> key when lilo
+starts. Then give the boot command manually and append a sound= argument
+to the boot command line. For example:
+
+lilo boot: linux sound=0x222071,0x138800
+
+The sound= argument could contain several configuration entries separated by a
+comma. Each option gives the configuration for one sound device.
+Give the options in the order given below. Other order of use is undefined.
+Each option is encoded as the following:
+
+	0xTaaaId, where
+          ||  ||
+          ||  |+----   d = DMA channel (0, 1, 3, 5, 6 or 7)
+          ||  +-----   I = IRQ (HEXADECIMAL!!! 1=1, ..., 9=9, 10=a, ..., 15=f)
+          |+-------- aaa = I/O address (hexadecimal)
+	  +----------  T = device type  1=FM Synth (YM3812 or OPL3)
+					2=SoundBlaster (1.0 to 2.0, Pro, 16)
+					3=ProAudioSpectrum16
+					4=Gravis UltraSound
+					5=MPU-401 UART midi
+					6=SB16 (16 bit DMA number)
+					7=SB16 Midi (MPU-401 emulation)
+
+These are the configuration templates for various soundcards:
+
+	0)	Disable the sound driver
+		
+		sound=0
+
+	1)	AdLib
+
+		sound=0x138800
+
+	2)	SoundBlaster family and compatibles
+
+		sound=0x2220Id,0x138800	  (remember to set the IRQ and DMA)
+	or if you have SB16 or SB16ASP, you have to use the following:
+	        (use the same IRQ (the I colums) in all three places. The
+	         the D is the 16 bit DMA channel (5 to 7) and the d is 
+	         the 8 bit one (1 or 3). The X is the 2nd digit of the
+	         midi IO address (3 or 0)).
+		sound=0x2220Id,0x6220ID,0x73X0I0,0x138800
+
+	3)	ProAudioSpectrum16, ProAudioStudio16, Logitech Soundman16 etc.
+
+		sound=0x3388Id,0x2220Id,0x138800 (set the DMAs and IRQs)
+         
+	4)	Gravis UltraSound
+
+		sound=0x42X0Id	(X is 1, 2, 3 or 4. Set the DMA and IRQ)
+	
+	5)	MPU-401
+
+		sound=0x5aaaI0
+
+If you have more than one soundcards, you have to concatenate the options
+for each of the cards. There cannot be more than one sound= argument in the
+command line. For example use "sound=0x5aaaI0,0x138800" if you have AdLib
+and MPU-401 on your system. 
+If there are two or more sound= arguments
+in the boot command line, just the last one takes effect. The earlier ones
+will be ignored silently.
+
+The boot time configuration feature is intended mainly for distributors of
+precompiled kernels. When this feature is used, drivers for all of the
+cards have to be enabled before compiling the driver. The configurator program
+doesn't enable MPU-401 when the full driver option is selected. It must be
+enabled by uncommenting "#define EXCLUDE_MPU401" in the sound/local.h.
+
+Important note!
+
+The sound driver is enabled by default. If the kernel is booted without
+using the sound=0 option, the sound driver is initialized using the compile
+time parameters. This could be dangerous (specially if the MPU-401 driver
+is enabled with I/O address 0x330 (used by AHA-1542 also)). If you want to
+compile the driver to be inactive by default, you have to append a
+#define SND_DEFAULT_ENABLE	0
+to the sound/local.h before compiling the driver.
+
+Remember to check that the sound setup routine is included in the 
+bootparams structure in linux/init/main.c. It should contain the following
+lines:
+
+#ifdef CONFIG_SOUND
+	{ "sound=", sound_setup },
+#endif
+
+In case these lines were not there, you have to insert them (the driver works
+without them but it's not possible to give the boot time parameters for the
+sound driver). Add also the following line somewhere near the beginning of
+linux/init/main.c:
+
+extern void sound_setup(char *str, int *ints);
+
+Problems
+--------
+
+If you have any kind of problems, there is a debugging feature which
+could help you to solve the problem. To use it, just execute the
+command:
+
+	cat /dev/sndstat 
+
+and look at the output. It should display some usefull info about the
+driver configuration. If there is no /dev/sndstat 
+(/dev/sndstat: No such file or directory), ensure that you have executed the
+soundinstall script (at the end of this file). The message: 
+/dev/dsp: No such device means that you don't have the sound driver installed
+on your kernel or the driver version is earlier than 1.99.6.
+
+
+- /dev/???????: No such file or directory.
+Run the script at the end of this file.
+
+- /dev/???????: No such device.
+You have not booted with a kernel containing the driver or the I/O address
+configuration doesn't match your hardaware. 
+
+- The module player (str) plays just a second and then stops completely.
+You have incorrect IRQ settings (usual with SB cards).
+
+- There is pauses in the playback of the module player (str).
+The str program requires more than 40% of the speed of a 486/50 to play
+without pauses at 44 kHz speed. A 386/25 can hardly play faster than 22 kHz.
+You should use lower speed (-s speed), buy a faster computer or a Gravis 
+UltraSound card. (If you already have GUS, you should use gmod and not the
+str). If the DSP_BUFFSIZE in the sound/local.h is less than (nr_channels*
+speed_in_Hz * (bits/8))/2, it could explain the pausing problem. Also check
+that the turbo swich is on and don't run applications like weather forecasting
+on background. Sometimes (very rarely) an IRQ conflict can cause similar
+problems with SB cards.
+If you want to play modules on a 386sx while recompiling the world, buy a GUS.
+It runs without burning your CPU.
+
+Hannu Savolainen
+hsavolai@cs.helsinki.fi
+
+----------------- cut here ------------------------------
+#!/bin/sh
+#
+#	soudinstall		
+#
+#		by Craig Metz - cmetz@thor.tjhsst.edu
+#
+# Create the devices
+#
+#	Mixer 		(14, 0)
+#
+if [ -e /dev/mixer ]; then 
+	rm -f /dev/mixer 
+fi
+mknod -m 666 /dev/mixer c 14 0
+
+if [ -e /dev/mixer1 ]; then 
+	rm -f /dev/mixer1 
+fi
+mknod -m 666 /dev/mixer1 c 14 16
+#
+#	Sequencer	(14, 1)
+#
+if [ -e /dev/sequencer ]; then
+	rm -f /dev/sequencer
+fi
+mknod -m 666 /dev/sequencer c 14 1
+#
+#	MIDI		(14, 2)	[ Not implemented ]
+#
+if [ -e /dev/midi ]; then
+	rm -f /dev/midi
+fi
+mknod -m 666 /dev/midi c 14 2
+#
+#	DSP		(14, 3)
+#
+if [ -e /dev/dsp ]; then
+	rm -f /dev/dsp
+fi
+mknod -m 666 /dev/dsp c 14 3
+#
+#	SPARC audio	(14, 4)	[ Not fully implemented ]
+#
+if [ -e /dev/audio ]; then
+	rm -f /dev/audio
+fi
+mknod -m 666 /dev/audio c 14 4
+#
+#	DSP2		(14, 19) /dev/dsp for the second soundcard.
+#				Also the SB emulation part of the
+#				PAS16 card.
+#
+if [ -e /dev/dsp1 ]; then
+	rm -f /dev/dsp1
+fi
+mknod -m 666 /dev/dsp1 c 14 19
+#
+#	SPARC audio1	(14, 20) [ Not fully implemented ]
+#				/dev/audio for the second soundcard.
+#				Also the SB emulation part of the
+#				PAS16 card.
+#
+if [ -e /dev/audio1 ]; then
+	rm -f /dev/audio1
+fi
+mknod -m 666 /dev/audio1 c 14 20
+#
+#	/dev/sndstat	(14,6)	For debugging purposes
+#
+if [ -e /dev/sndstat ]; then
+	rm -f /dev/sndstat
+fi
+mknod -m 666 /dev/sndstat c 14 6
+exit 0

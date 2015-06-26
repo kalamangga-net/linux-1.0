@@ -1,0 +1,204 @@
+This is release 1.3 of the SoundBlaster Pro (Matsushita, Kotobuki,
+Panasonic, CreativeLabs, Aztech) CD-ROM driver for Linux.
+
+The driver is able to drive the whole family of IDE-style
+Matsushita/Kotobuki/Panasonic drives (the "double speed" versions
+like CR-562 and CR-563, too), and it will work with the soundcard
+interfaces (SB Pro, SB 16, Galaxy, SoundFX, ...) and/or with
+the "no-sound" cards (Panasonic CI-101P, LaserMate, Aztech, ...).
+The interface type has to get configured in /usr/include/linux/sbpcd.h, 
+because the behavior is different.
+
+The driver respects different drive firmware releases - my old drive
+is a 2.11, but it should work with "old" drives <2.01 ... >3.00
+and with "new" drives (which count the releases around 0.75 or
+1.00).
+
+Up to 4 drives are supported. CR-52x and CR-56x drives can be mixed,
+but the CR-521 ones are hard-wired to drive ID 0. The drives have
+to use different drive IDs, but the same controller (it will be a
+little bit harder to support up to four interface cards - but I plan
+to do it the day somebody wishes to connect a fifth drive).
+Each drive has to get a unique minor number (0...3), corresponding
+to it's drive ID. The drive IDs may be selected freely from 0 to 3 -
+they must not be in consecutive order.
+
+The driver supports reading of data from the CD and playing of
+audio tracks. The audio part should run with WorkMan, xcdplayer,
+with the "non-X11" products CDplayer and WorkBone - tell me if
+it is not compatible with other software.
+
+MultiSession is supported, "ManySession" (see below) alternatively.
+Photo CDs work, too. At ftp.gwdg.de:/pub/linux/hpcdtoppm/ is a package 
+to convert photo CD image files.
+
+The transfer rate will reach 150 kB/sec with standard drives and
+the full 300 kB/sec with double-speed drives.
+
+This release is part of the standard kernel and consists of
+- this README file
+- the driver file linux/drivers/block/sbpcd.c
+- the header file linux/include/linux/sbpcd.h.
+
+
+To install:
+-----------
+
+1. Setup your hardware parameters. Though the driver does "auto-probing"
+   now, this step is recommended for every-day use.
+   a. Go into /usr/src/linux/include/linux/sbpcd.h and configure
+      it for your hardware (near the beginning):
+      a1. Set it up for the appropriate type of interface board.
+          Most "compatible" sound boards (for example "Highscreen",
+          "SoundFX" and "Galaxy") need the "SBPRO 0" setup. The
+          "no-sound" board from OmniCd needs the "SBPRO 1" setup.
+          sbpcd.c holds some examples in it's auto-probe list.
+      a2. Tell the address of your CDROM_PORT.
+   b. Additionally for 2.a1 and 2.a2, the setup may be done during
+      boot time (via the "kernel command line" or "LILO option"):
+          sbpcd=0x230,SoundBlaster
+      or
+          sbpcd=0x320,LaserMate
+      (these strings are case sensitive!).
+
+2. Do a "make config" and select "yes" for Matsushita CD-ROM
+   support and for ISO9660 FileSystem support.
+   SCSI and/or SCSI CD-ROM support is not needed.
+
+3. Then do a "make dep", then make the kernel image ("make zlilo"
+   or else).
+
+4. Make the device file(s). The driver uses definitely and exclusive
+   the MAJOR 25, so do
+
+        mknod /dev/sbpcd b 25 0       (if you have only drive #0)
+and/or
+        mknod /dev/sbpcd0 b 25 0
+        mknod /dev/sbpcd1 b 25 1
+        mknod /dev/sbpcd2 b 25 2
+        mknod /dev/sbpcd3 b 25 3
+
+   to make the node(s).
+   Take care that you create a node with the same MINOR as your drive
+   id is. So, if the DOS driver tells you have drive id #3, you have to
+        mknod /dev/<any_name> b 25 3
+   
+   If you further make a link like
+        ln -s sbpcd /dev/cdrom
+   you can use the name /dev/cdrom, too.
+
+5. Reboot with the new kernel.
+
+You should now be able to do "mount -t iso9660 /dev/sbpcd /mnt"
+and see the contents of your CD in the /mnt directory, and/or
+hear music with "workman -c /dev/sbpcd &".
+
+
+Things of interest:
+-------------------
+
+The driver is configured to try the SoundBlaster Pro type of
+interface at I/O port 0x0230 first. If this is not appropriate,
+sbpcd.h should get changed (you will find the right place -
+just at the beginning).
+
+No DMA and no IRQ is used, so the IRQ adjusting is not necessary,
+and the IRQ line stays free for the SB Pro sound drivers.
+
+To reduce or increase the amount of kernel messages, edit
+sbpcd.c and change the initialization of the variable
+"sbpcd_debug". This is the way to get rid of the initial
+warning message block, too.
+
+With "#define MANY_SESSION 1" (sbpcd.c), the driver can use
+"many-session" CDs. This will work only with "new" drives like 
+CR-562 or CR-563. That is NOT multisession - it is a CD
+with multiple independent sessions, each containing block
+addresses as if it were the only session. With this feature
+enabled, the driver will read the LAST session. Without it,
+the FIRST session gets read.
+If you would like the support of reading "in-between" sessions,
+drop me a mail and some food for the soul. :-)
+Those "many-session" CDs can get made by CDROM writers like
+Philips CDD 521.
+If you enable this feature, it is impossible to read true
+multisession CDs.
+
+
+Auto-probing at boot time:
+--------------------------
+
+The driver does auto-probing at all well-known interface card
+addresses now. The idea to do that came from Adam J. Richter 
+(YGGDRASIL).
+
+This auto-probing looks first at the configured address resp.
+the address submitted by the kernel command line. With this,
+it is possible to use this driver within installation boot
+floppies, and for any non-standard address, too.
+
+Auto-probing will make an assumption about the interface type 
+("SBPRO" or not), based upon the address. That assumption may
+be wrong (initialization will be o.k., but you will get I/O
+errors during mount). In that case, use the "kernel command 
+line" feature and specify address & type at boot time to find 
+out the right setup.
+
+SBPCD's auto-probing happens before the initialization of the
+net drivers. That makes a hang possible if an ethernet card
+gets touched.
+
+For every-day use, address and type should get configured
+within sbpcd.h. That will stop the auto-probing due to success
+with the first try.
+
+
+Setting up address and interface type:
+--------------------------------------
+
+If your I/O port address is not 0x0230 or if you use a "no-sound"
+interface other than OmniCD, you have to look for the #defines
+near the beginning of sbpcd.h and configure them: set SBPRO to
+0 or 1, and change CDROM_PORT to the address of your CDROM I/O port.
+
+Most of the "SoundBlaster compatible" cards behave like the
+no-sound interfaces! 
+
+With "original" SB Pro cards, an initial setting of CD_volume
+through the sound cards MIXER register gets done. That happens
+at the end of "sbpcd_init". If you are using a "compatible"
+sound card of type "LaserMate", you can change that code to get
+it done with your card, too...
+
+
+Using audio CDs:
+----------------
+
+Workman, WorkBone, xcdplayer and cdplayer should work good now,
+even with the double-speed drives.
+
+The program CDplayer likes to talk to "/dev/mcd" only, xcdplayer
+wants "/dev/rsr0", workman loves "/dev/sr0" - so, do the appropriate
+links for using them without the need of supplying parameters.
+
+
+Known problems:
+---------------
+
+Currently, the detection of disk change or removal does not
+work as good as it should.
+
+
+Bug reports, comments, wishes, donations (technical information
+is a donation, too :-) etc. to
+                         emoenke@gwdg.de
+ or to                   eberhard_moenkeberg@rollo.central.de
+ or to my FIDO address:  Eberhard Moenkeberg, 2:2437/210.27
+
+
+SnailMail address, preferable for CD editors if they want to submit
+a free "cooperation" copy:
+                         Eberhard Moenkeberg
+                         Reinholdstr. 14
+                         D-37083 Goettingen
+                         Germany

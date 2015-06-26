@@ -1,0 +1,243 @@
+#! /bin/sh
+#
+# This script is used to configure the linux kernel.
+#
+# It was inspired by the challenge in the original Configure script
+# to ``do something better'', combined with the actual need to ``do
+# something better'' because the old configure script wasn't flexible
+# enough.
+#
+# Please send comments / questions / bug fixes to raymondc@microsoft.com.
+#
+# Each line in the config file is a command.
+#
+#	# internal comment
+#
+#		Lines beginning with a `#' are ignored.
+#
+#	: message
+#
+#		`:' causes the line to be echoed to the screen.
+#
+#	* external comment
+#
+#		`*' causes the line to be placed in the output
+#		configuration file as a comment as well as being
+#		echoed to the screen.
+#
+#	if condition
+#		... commands ...
+#	else
+#		... commands ...
+#	fi
+#
+#		This does the obvious thing.  The `else' clause is
+#		optional.  Conditionals can be nested.
+#
+#		The `condition' can be any valid bash expression.
+#		They typically involve tests against environment
+#		variables set by configuration options.  For example,
+#
+#		if [ "$CONFIG_SCSI" = "y" ]
+#			...More stuff...
+#		fi
+#
+#		Note!  That there is no `then' keyword.
+#
+#	bool 'prompt' CONFIG_VARIABLE default
+#
+#		This prompts the user for a boolean value.
+#		The prompt may not contain an apostrophe.
+#		`default' should be either `y' or `n'.
+#		The user's response is recorded in four places.
+#
+#		In .config, if `y'
+#			CONFIG_VARIABLE = CONFIG_VARIABLE
+#		In .config, if `n'
+#			# CONFIG_VARIABLE is not set
+#			
+#		In autoconf.h, if `y'
+#			#define CONFIG_VARIABLE 1
+#		In autoconf.h, if `n'
+#			#undef CONFIG_VARIABLE
+#
+#		In config.in, if `y'
+#			bool 'prompt' CONFIG_VARIABLE y
+#		In config.in, if `n'
+#			bool 'prompt' CONFIG_VARIABLE n
+#
+#		In the environment of the Configure script, if `y'
+#			CONFIG_VARIABLE = y
+#		In the environment of the Configure script, if `n'
+#			CONFIG_VARIABLE = n
+#
+#		The value is placed into the environment of the Configure
+#		script so that later parts of config.in can use the `if'
+#		command to inspect the results of previous queries.
+#
+#	int 'prompt' CONFIG_VARIABLE default
+#
+#		This prompts the user for an integer value.
+#		The prompt may not contain an apostrophe.
+#		`default' should be an integer.
+#
+#		The response is recorded as follows.
+#
+#		In .config
+#			CONFIG_VARIABLE = response
+#		In autoconf.h
+#			#define CONFIG_VARIABLE (response)
+#		In config.in
+#			int 'prompt' CONFIG_VARIABLE response
+#		In the environment of the Configure script
+#			CONFIG_VARIABLE = response
+#
+# 050793 - use IFS='@' to get around a bug in a pre-version of bash-1.13
+# with an empty IFS.
+
+#
+# Make sure we're really running bash.
+#
+# I would really have preferred to write this script in a language with
+# better string handling, but alas, bash is the only scripting language
+# that I can be reasonable sure everybody has on their linux machine.
+#
+[ -z "$BASH" ] && { echo "Configure requires bash" 1>&2; exit 1; }
+
+# Disable filename globbing once and for all.
+# Enable function cacheing.
+set -f -h
+
+#
+# readln reads a line into $ans.
+#
+#	readln prompt default
+#
+function readln () {
+	echo -n "$1"
+	IFS='@' read ans </dev/tty || exit 1
+	[ -z "$ans" ] && ans=$2
+}
+
+# bool processes a boolean argument
+#
+#	bool tail
+#
+function bool () {
+	# Slimier hack to get bash to rescan a line.
+	eval "set -- $1"
+	ans=""
+	while [ "$ans" != "y" -a "$ans" != "n" ]; do
+		readln "$1 ($2) [$3] " "$3"
+	done
+	if [ "$ans" = "y" ]; then
+		echo "$2 = $2" >>$CONFIG
+		echo "#define $2 1" >>$CONFIG_H
+	else
+		echo "# $2 is not set" >>$CONFIG
+		echo "#undef $2" >>$CONFIG_H
+	fi
+	raw_input_line="bool '$1' $2 $ans"
+	eval "$2=$ans"
+}
+
+# int processes an integer argument
+#
+#	int tail
+#
+function int () {
+	# Slimier hack to get bash to rescan a line.
+	eval "set -- $1"
+	ans="x"
+	while [ $[$ans+0] != "$ans" ]; do
+		readln "$1 ($2) [$3] " "$3"
+	done
+	echo "$2 = $ans" >>$CONFIG
+	echo "#define $2 ($ans)" >>$CONFIG_H
+	raw_input_line="int '$1' $2 $ans"
+	eval "$2=$ans"
+}
+
+CONFIG=.tmpconfig
+CONFIG_H=include/linux/autoconf.h
+trap "rm -f $CONFIG $CONFIG_H config.new ; exit 1" 1 2
+
+#
+# Make sure we start out with a clean slate.
+#
+> config.new
+echo "#" > $CONFIG
+echo "# Automatically generated make config: don't edit" >> $CONFIG
+echo "#" >> $CONFIG
+
+echo "/*" > $CONFIG_H
+echo " * Automatically generated C config: don't edit" >> $CONFIG_H
+echo " */" >> $CONFIG_H
+
+stack=''
+branch='t'
+
+while IFS='@' read raw_input_line
+do
+	# Slimy hack to get bash to rescan a line.
+	read cmd rest <<-END_OF_COMMAND
+		$raw_input_line
+	END_OF_COMMAND
+
+	if [ "$cmd" = "*" ]; then
+		if [ "$branch" = "t" ]; then
+			echo "$raw_input_line"
+			echo "# $rest" >>$CONFIG
+			if [ "$prevcmd" != "*" ]; then
+				echo >>$CONFIG_H
+				echo "/* $rest" >>$CONFIG_H
+			else
+				echo " * $rest" >>$CONFIG_H
+			fi
+			prevcmd="*"
+		fi
+	else
+		[ "$prevcmd" = "*" ] && echo " */" >>$CONFIG_H
+		prevcmd=""
+		case "$cmd" in
+		:)	[ "$branch" = "t" ] && echo "$raw_input_line" ;;
+		int)	[ "$branch" = "t" ] && int "$rest" ;;
+		bool)	[ "$branch" = "t" ] && bool "$rest" ;;
+		exec)	[ "$branch" = "t" ] && ( sh -c "$rest" ) ;;
+		if)	stack="$branch $stack"
+			if [ "$branch" = "t" ] && eval "$rest"; then
+				branch=t
+			else
+				branch=f
+			fi ;;
+		else)	if [ "$branch" = "t" ]; then
+				branch=f
+			else
+				read branch rest <<-END_OF_STACK
+					$stack
+				END_OF_STACK
+			fi ;;
+		fi)	[ -z "$stack" ] && echo "Error!  Extra fi." 1>&2
+			read branch stack <<-END_OF_STACK
+				$stack
+			END_OF_STACK
+			;;
+		esac
+	fi
+	echo "$raw_input_line" >>config.new
+done
+[ "$prevcmd" = "*" ] && echo " */" >>$CONFIG_H
+
+[ -z "$stack" ] || echo "Error!  Untermiated if." 1>&2
+
+mv config.in config.old
+mv config.new config.in
+
+echo
+echo "The linux kernel is now hopefully configured for your setup."
+echo "Check the top-level Makefile for additional configuration,"
+echo "and do a 'make dep ; make clean' if you want to be sure all"
+echo "the files are correctly re-made"
+echo
+
+exit 0

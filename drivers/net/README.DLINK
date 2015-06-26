@@ -1,0 +1,177 @@
+This is version 0.32
+
+          CONTENTS:
+
+            1. Introduction.
+            2. License.
+            3. Files in this release.
+            4. Installation.
+            5. Problems and tuning.
+            6. Acknowledgments.
+
+
+          1. INTRODUCTION.
+
+          This is an Ethernet driver for the D-Link DE-600 Ethernet pocket
+          adapter for the parallel port, used with Linux on a laptop.
+          Some improvements over the 0.2X releases include:
+            o  driver code trying to send packets end to end,
+            o  a more solid interrupt handler,
+            o  a fix that modifies the tcp protocol so that
+               the DE-600 won't choke as easily on receives.
+
+          This is a beta release, i.e. it ought to work! (:-)
+
+          I have used this driver for NFS, ftp, telnet and X-clients on
+          remote machines. Transmissions with ftp seems to work as
+          good as can be expected (i.e. > 80k bytes/sec) from a
+          parallel port...:-)
+          The speed limit is now in the upper protocols,
+          at least for a 386SX-25 :-)
+
+          All comments/fixes to Bjorn Ekwall (bj0rn@blox.se).
+
+          (No, I have _not_ included any support for the DE-620 yet
+          since I have _no_ official documentation on how to program
+          that beast. There are some code modifications in place
+          already in case I get some _real_ info..., c'mon D-Link!)
+
+
+          2. LICENSE.
+
+          This program is free software; you can redistribute it
+          and/or modify it under the terms of the GNU General Public
+          License as published by the Free Software Foundation; either
+          version 2, or (at your option) any later version.
+
+          This program is distributed in the hope that it will be
+          useful, but WITHOUT ANY WARRANTY; without even the implied
+          warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+          PURPOSE. See the GNU General Public License for more
+          details.
+
+          You should have received a copy of the GNU General Public
+          License along with this program; if not, write to the Free
+          Software Foundation, Inc., 675 Mass Ave, Cambridge, MA
+          02139, USA.
+
+
+          3. FILES IN THIS RELEASE.
+
+          README.DLINK  This file.
+          d_link.c      The Source (,may it be with You :-).
+
+
+          4. INSTALLATION.
+
+           o Get the latest net binaries (those referring to /conf/net).
+
+           o Read the NET-2 and Ethernet HOWTO's and modify your setup.
+
+           o To include networking and the DE600 in your kernel, do:
+               # cd /linux
+               # make config       (answer yes on net and DE600)
+               # make clean
+               # make depend
+               # make zImage (or whatever magic you usually do)
+
+           o I use lilo to boot multiple kernels, so that I at least
+             can have one working kernel :-). If you do too, append
+             these lines to /etc/lilo/config:
+
+                  image = /usr/src/linux/zImage
+                       label = newlinux
+                       root = /dev/hda2 (or whatever YOU have...)
+
+               # /etc/lilo/install
+
+           o Do "sync" and reboot the new kernel with a D-Link pocket
+             adapter connected.
+
+          Now, watch for any fireworks (try to ignore (or live with)
+          the smoke... :-) or:
+
+               do
+                    read NET-FAQ and all info in /conf/net
+                    if fix in code needed...
+			 vi /linux/net/inet/d_link.c
+			 cd /linux
+                         make zImage
+			 /etc/lilo/install
+                         sync
+                         reboot
+                    endif
+                    try it...
+               until satisfied
+
+
+          5. "PROBLEMS" AND TUNING,
+
+           o Some machines have trouble handling the parallel port and
+             the adapter at high speed. If you experience problems:
+
+             - The adapter is not recognized at boot, i.e. an Ethernet
+               adress of 00:80:c8:... is not shown, try to add another
+                 "; SLOW_DOWN_IO"
+               at D_LINK_SLOW_DOWN near line 43. As a last resort, uncomment:
+                 "#define REALLY_SLOW_IO"
+               near line 48 (see <asm/io.h> for hints).
+
+             - You experience "timeout" messages: first try to add
+               another "; SLOW_DOWN_IO" at D_LINK_SLOW_DOWN near line 22,
+               _then_ try to increase the value (original value: 5)
+               at "if (tickssofar < 5)" near line 424.
+
+             - The adapter _is_ recognized at boot but you get
+               messages about "Network Unreachable": The problem
+               is probably _not_ with the d_link driver.
+               Check your net configuration instead (ifconfig and route)
+               in "rc.inet1".
+             
+           o There might be some temporary "slowdowns" when communicating
+             with other systems when receiving through the TCP layer.
+             A "fix" for this is made lastly in the source, in the function
+             "d_link_rspace()" that is used to modify TCP if there is
+             a DE-600 in use (see comments around lines 320 and 730).
+
+             The aim of this fix is to reduce the possibility of more
+             than two packets arriving adressed to the adapter within
+             the timespan it takes to copy one packet from the adapter.
+
+             Transfers with ftp with a packetsize of >= 1k will be taken
+             care of with this "fix", but telnet with many small packets
+             might run into problems sometimes. The "slowdown" will usually
+             take care of itself, especially if there are some larger packets
+             arriving now and then...
+
+             There is some room for "tuning" by changing (decreasing) the
+             values for "D_LINK_MAX_WINDOW" and "D_LINK_MIN_WINDOW"
+             defined near the end of the file (around line 726).
+             UDP (i.e. NFS) does not suffer from the same problem.
+
+           o The code inside d_link_interrupt() is somewhat of a
+             (educated) guesswork since my only source of information
+             is the asm-source (:-), though I have tried to improve on it.
+
+           o There is some rudimentary support for debugging, see
+	     the source. Use "-DD_LINK_DEBUG=3" when compiling.
+
+
+          6. ACKNOWLEDGMENTS.
+
+          This driver wouldn't have been done without the base
+          (and support) from Ross Biro (bir7@leland.stanford.edu).
+          The driver also relies upon GPL-ed source from D-Link Inc.
+          and from Russel Nelson at Crynwr Software (nelson@crynwr.com).
+          Additional input also from Donald Becker (becker@super.org).
+          Alpha release primary victim^H^H^H^H^H^Htester:
+          Erik Proper (erikp@cs.kun.nl).
+          Good input also from several users, most notably Mark Burton
+          <markb@ordern.demon.co.uk>.
+          Lastly, Fred van Kempen deserves all thanks for keeping up
+          the good work which will give us all a _great_ net package!
+
+
+          Happy hacking!
+
+          Bjorn Ekwall == bj0rn@blox.se

@@ -1,0 +1,25 @@
+Linux can read, but not write, OS/2 HPFS partitions.
+
+Mount options are the same as for msdos partitions.
+
+  uid=nnn	All files in the partition will be owned by user id nnn.
+  gid=nnn	All files in the partition will be in group nnn.
+  umask=nnn	The permission mask (see umask(1)) for the partition.
+  conv=binary   Data is returned exactly as is, with CRLF's.  [default]
+  conv=text     (Carriage return, line feed) is replaced with newline.
+  conv=auto     Chooses, file by file, conv=binary or conv=text (by guessing)
+
+There is one mount option unique to HPFS.
+
+  case=lower	Convert file names to lower case.  [default]
+  case=asis     Return file names as is, in mixed case.
+
+Case is not significant in filename matching, like real HPFS.
+
+
+Command line example
+    mkdir -p /os2/c
+    mount -t hpfs -o uid=100,gid=100 /dev/sda6 /os2/c
+
+/etc/fstab example
+    /dev/sdb5	/d/f    hpfs    ro,uid=402,gid=402,umask=002
