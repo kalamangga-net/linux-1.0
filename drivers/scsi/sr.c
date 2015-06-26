@@ -260,7 +260,7 @@ static void rw_intr (Scsi_Cmnd * SCpnt)
 static int sr_open(struct inode * inode, struct file * filp)
 {
 	if(MINOR(inode->i_rdev) >= NR_SR || 
-	   !scsi_CDs[MINOR(inode->i_rdev)].device) return -ENODEV;   /* No such device */
+	   !scsi_CDs[MINOR(inode->i_rdev)].device) return -ENXIO;   /* No such device */
 
         check_disk_change(inode->i_rdev);
 

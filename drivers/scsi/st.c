@@ -359,7 +359,7 @@ scsi_tape_open(struct inode * inode, struct file * filp)
 
     dev = MINOR(inode->i_rdev) & 127;
     if (dev >= NR_ST)
-      return (-ENODEV);
+      return (-ENXIO);
     STp = &(scsi_tapes[dev]);
     if (STp->in_use) {
       printk("st%d: Device already in use.\n", dev);

@@ -135,10 +135,10 @@ __ntohl(unsigned long int x)
 static __inline__ unsigned long int
 __constant_ntohl(unsigned long int x)
 {
-	return (((x & 0x000000ff) << 24) |
-		((x & 0x0000ff00) <<  8) |
-		((x & 0x00ff0000) >>  8) |
-		((x & 0xff000000) >> 24));
+	return (((x & 0x000000ffU) << 24) |
+		((x & 0x0000ff00U) <<  8) |
+		((x & 0x00ff0000U) >>  8) |
+		((x & 0xff000000U) >> 24));
 }
 
 static __inline__ unsigned short int
@@ -164,19 +164,19 @@ __constant_ntohs(unsigned short int x)
 
 #ifdef  __OPTIMIZE__
 #  define ntohl(x) \
-(__builtin_constant_p((x)) ? \
+(__builtin_constant_p((long)(x)) ? \
  __constant_ntohl((x)) : \
  __ntohl((x)))
 #  define ntohs(x) \
-(__builtin_constant_p((x)) ? \
+(__builtin_constant_p((short)(x)) ? \
  __constant_ntohs((x)) : \
  __ntohs((x)))
 #  define htonl(x) \
-(__builtin_constant_p((x)) ? \
+(__builtin_constant_p((long)(x)) ? \
  __constant_htonl((x)) : \
  __htonl((x)))
 #  define htons(x) \
-(__builtin_constant_p((x)) ? \
+(__builtin_constant_p((short)(x)) ? \
  __constant_htons((x)) : \
  __htons((x)))
 #endif

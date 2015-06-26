@@ -59,7 +59,7 @@ static int sd_open(struct inode * inode, struct file * filp)
 	target =  DEVICE_NR(MINOR(inode->i_rdev));
 
 	if(target >= NR_SD || !rscsi_disks[target].device)
-	  return -ENODEV;   /* No such device */
+	  return -ENXIO;   /* No such device */
 	
 /* Make sure that only one process can do a check_change_disk at one time.
  This is also used to lock out further access when the partition table is being re-read. */

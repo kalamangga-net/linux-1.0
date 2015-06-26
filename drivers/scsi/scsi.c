@@ -126,6 +126,7 @@ static unsigned char generic_sense[6] = {REQUEST_SENSE, 0,0,0, 255, 0};
 
 static struct blist blacklist[] = 
 {
+   {"CHINON","CD-ROM CDS-431","H42"},  /* Locks up if polled for lun != 0 */
    {"DENON","DRD-25X","V"},   /* A cdrom that locks up when probed at lun != 0 */
    {"IMS", "CDD521/10","2.06"},   /* Locks-up when LUN>0 polled. */
    {"MAXTOR","XT-3280","PR02"},   /* Locks-up when LUN>0 polled. */

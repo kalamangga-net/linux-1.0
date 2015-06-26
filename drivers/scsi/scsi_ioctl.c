@@ -235,7 +235,7 @@ int scsi_ioctl (Scsi_Device *dev, int cmd, void *arg)
         char scsi_cmd[12];
 
 	if ((cmd != 0 && dev->index > NR_SCSI_DEVICES))
-		return -ENODEV;
+		return -ENXIO;
 	
 	switch (cmd) {
 	        case SCSI_IOCTL_GET_IDLUN:

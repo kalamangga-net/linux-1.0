@@ -157,8 +157,9 @@ asmlinkage int sys_fork(struct pt_regs regs)
 /*
  * set up new TSS and kernel stack
  */
-	if (!(p->kernel_stack_page = __get_free_page(GFP_KERNEL)))
+	if (!(p->kernel_stack_page = get_free_page(GFP_KERNEL)))
 		goto bad_fork_cleanup;
+	*(unsigned long *)p->kernel_stack_page = STACK_MAGIC;
 	p->tss.es = KERNEL_DS;
 	p->tss.cs = KERNEL_CS;
 	p->tss.ss = KERNEL_DS;

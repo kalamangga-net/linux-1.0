@@ -98,7 +98,7 @@ int sr_ioctl(struct inode * inode, struct file * file, unsigned int cmd, unsigne
 	int result, target;
 
 	target = MINOR(dev);
-	if (target >= NR_SR) return -ENODEV;
+	if (target >= NR_SR) return -ENXIO;
 
 	switch (cmd) 
 		{

@@ -85,7 +85,7 @@ extern void mem_use(void);
 extern int timer_interrupt(void);
 asmlinkage int system_call(void);
 
-static unsigned long init_kernel_stack[1024];
+static unsigned long init_kernel_stack[1024] = { STACK_MAGIC, };
 struct task_struct init_task = INIT_TASK;
 
 unsigned long volatile jiffies=0;
@@ -95,7 +95,7 @@ struct task_struct *last_task_used_math = NULL;
 
 struct task_struct * task[NR_TASKS] = {&init_task, };
 
-long user_stack [ PAGE_SIZE>>2 ] ;
+long user_stack [ PAGE_SIZE>>2 ] = { STACK_MAGIC, };
 
 struct {
 	long * a;
@@ -772,6 +772,7 @@ asmlinkage int sys_nice(long increment)
 
 static void show_task(int nr,struct task_struct * p)
 {
+	int free;
 	static char * stat_nam[] = { "R", "S", "D", "Z", "T", "W" };
 
 	printk("%-8s %3d ", p->comm, (p == current) ? -nr : nr);
@@ -783,8 +784,11 @@ static void show_task(int nr,struct task_struct * p)
 		printk(" current  ");
 	else
 		printk(" %08lX ", ((unsigned long *)p->tss.esp)[3]);
-	printk("%5lu %5d %6d ",
-		p->tss.esp - p->kernel_stack_page, p->pid, p->p_pptr->pid);
+	for (free = 1; free < 1024 ; free++) {
+		if (((unsigned long *)p->kernel_stack_page)[free])
+			break;
+	}
+	printk("%5lu %5d %6d ", free << 2, p->pid, p->p_pptr->pid);
 	if (p->p_cptr)
 		printk("%5d ", p->p_cptr->pid);
 	else

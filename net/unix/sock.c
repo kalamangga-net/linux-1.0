@@ -413,10 +413,13 @@ unix_proto_bind(struct socket *sock, struct sockaddr *umyaddr,
   old_fs = get_fs();
   set_fs(get_ds());
   i = do_mknod(fname, S_IFSOCK | S_IRWXUGO, 0);
-  if (i == 0) i = open_namei(fname, 0, S_IFSOCK, &upd->inode, NULL);
+  if (i == -EEXIST)
+  	i = -EADDRINUSE;
+  if (i == 0)
+  	i = open_namei(fname, 0, S_IFSOCK, &upd->inode, NULL);
   set_fs(old_fs);
   if (i < 0) {
-	printk("UNIX: bind: can't open socket %s\n", fname);
+	dprintf(1, "UNIX: bind: can't open socket %s\n", fname);
 	return(i);
   }
   upd->sockaddr_len = sockaddr_len;	/* now its legal */

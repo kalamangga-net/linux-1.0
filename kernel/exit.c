@@ -89,6 +89,8 @@ void release(struct task_struct * p)
 		if (task[i] == p) {
 			task[i] = NULL;
 			REMOVE_LINKS(p);
+			if (STACK_MAGIC != *(unsigned long *)p->kernel_stack_page)
+				printk(KERN_ALERT "release: %s kernel stack corruption. Aiee\n", p->comm);
 			free_page(p->kernel_stack_page);
 			free_page((long) p);
 			return;
@@ -395,9 +397,6 @@ fake_volatile:
 		}
 	}
 
-	current->state = TASK_ZOMBIE;
-	current->exit_code = code;
-	current->rss = 0;
 	/* 
 	 * Check to see if any process groups have become orphaned
 	 * as a result of our exiting, and if they have any stopped
@@ -456,6 +455,9 @@ fake_volatile:
 		disassociate_ctty(1);
 	if (last_task_used_math == current)
 		last_task_used_math = NULL;
+	current->state = TASK_ZOMBIE;
+	current->exit_code = code;
+	current->rss = 0;
 #ifdef DEBUG_PROC_TREE
 	audit_ptree();
 #endif

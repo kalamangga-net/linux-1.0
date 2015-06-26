@@ -300,7 +300,6 @@ if (size &&
     }
 size = p->bh_length;
 p->bh_flags = MF_FREE; /* As of now this block is officially free */
-
 save_flags(flags);
 cli ();
 p->bh_next = page->firstfree;

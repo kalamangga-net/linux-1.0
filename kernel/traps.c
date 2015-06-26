@@ -101,7 +101,10 @@ asmlinkage void alignment_check(void);
 	printk("ds: %04x   es: %04x   fs: %04x   gs: %04x   ss: %04x\n",
 		regs->ds, regs->es, regs->fs, regs->gs, ss);
 	store_TR(i);
-	printk("Pid: %d, process nr: %d (%s)\nStack: ", current->pid, 0xffff & i, current->comm);
+	if (STACK_MAGIC != *(unsigned long *)current->kernel_stack_page)
+		printk("Corrupted stack page\n");
+	printk("Process %s (pid: %d, process nr: %d, stackpage=%08lx)\nStack: ",
+		current->comm, current->pid, 0xffff & i, current->kernel_stack_page);
 	for(i=0;i<5;i++)
 		printk("%08lx ", get_seg_long(ss,(i+(unsigned long *)esp)));
 	printk("\nCode: ");
