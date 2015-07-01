@@ -153,7 +153,8 @@ static int ei_start_xmit(struct sk_buff *skb, struct device *dev)
 		else {
 			/* The 8390 probably hasn't gotten on the cable yet. */
 			printk(KERN_DEBUG "%s: Possible network cable problem?\n", dev->name);
-			ei_local->interface_num ^= 1; 	/* Try a different xcvr.  */
+			if (ei_local->stat.tx_packets == 0)
+				ei_local->interface_num ^= 1;   /* Try a different xcvr.  */
 		}
 		/* Try to restart the card.  Perhaps the user has fixed something. */
 		ei_reset_8390(dev);
@@ -285,7 +286,7 @@ void ei_interrupt(int reg_ptr)
     
     /* !!Assumption!! -- we stay in page 0.	 Don't break this. */
     while ((interrupts = inb_p(e8390_base + EN0_ISR)) != 0
-		   && ++boguscount < 5) {
+		   && ++boguscount < 9) {
 		if (interrupts & ENISR_RDC) {
 			/* Ack meaningless DMA complete. */
 			outb_p(ENISR_RDC, e8390_base + EN0_ISR);

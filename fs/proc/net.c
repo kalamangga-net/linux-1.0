@@ -168,10 +168,10 @@ static int proc_readnet(struct inode * inode, struct file * file,
 		return -ENOMEM;
 	ino = inode->i_ino;
 	switch (ino) {
-#ifdef CONFIG_INET
 		case 128:
 			length = unix_get_info(page);
 			break;
+#ifdef CONFIG_INET
 		case 129:
 			length = arp_get_info(page);
 			break;

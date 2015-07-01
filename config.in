@@ -104,8 +104,6 @@ bool 'System V and Coherent filesystem support' CONFIG_SYSV_FS n
 *
 *  character devices
 *
-#bool 'Keyboard meta-key sends ESC-prefix' CONFIG_KBD_META y
-#bool 'Keyboard Num Lock on by default' CONFIG_KBD_NUML y
 bool 'Parallel printer support' CONFIG_PRINTER n
 bool 'Logitech busmouse support' CONFIG_BUSMOUSE n
 bool 'PS/2 mouse (aka "auxiliary device") support' CONFIG_PSMOUSE y

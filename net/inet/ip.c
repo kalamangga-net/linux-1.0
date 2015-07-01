@@ -1198,7 +1198,7 @@ ip_forward(struct sk_buff *skb, struct device *dev, int is_frag)
 	{
 		if(iph->tos & IPTOS_LOWDELAY)
 			dev2->queue_xmit(skb2, dev2, SOPRI_INTERACTIVE);
-		if(iph->tos & IPTOS_THROUGHPUT)
+		else if(iph->tos & IPTOS_THROUGHPUT)
 			dev2->queue_xmit(skb2, dev2, SOPRI_BACKGROUND);
 		else
 			dev2->queue_xmit(skb2, dev2, SOPRI_NORMAL);
