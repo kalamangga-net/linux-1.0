@@ -235,7 +235,7 @@ int sys_semctl (int semid, int semnum, int cmd, void *arg)
 		case GETALL:
 			if (!arg || ! (array = (ushort *) get_fs_long((int *) arg)))
 				return -EFAULT;
-			i = verify_area (VERIFY_WRITE, array, nsems* sizeof(short));
+			i = verify_area (VERIFY_WRITE, array, nsems*sizeof(short));
 			if (i)
 				return i;
 		}
@@ -266,7 +266,7 @@ int sys_semctl (int semid, int semnum, int cmd, void *arg)
 	case IPC_STAT:
 		if (!arg || !(buf = (struct semid_ds *) get_fs_long((int *) arg))) 
 			return -EFAULT;
-		if ((i = verify_area (VERIFY_WRITE, arg, sizeof tbuf)))
+		if ((i = verify_area (VERIFY_WRITE, buf, sizeof(*sma))))
 			return i;
 		break;
 	case IPC_SET:

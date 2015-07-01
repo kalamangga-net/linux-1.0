@@ -56,7 +56,7 @@ static int sg_ioctl(struct inode * inode,struct file * file,
  {
   int dev = MINOR(inode->i_rdev);
   if ((dev<0) || (dev>=NR_SG))
-   return -ENXIO
+   return -ENXIO;
   switch(cmd_in)
    {
     case SG_SET_TIMEOUT:

@@ -166,9 +166,14 @@ asmlinkage int sys_vm86(struct vm86_struct * v86)
 {
 	struct vm86_struct info;
 	struct pt_regs * pt_regs = (struct pt_regs *) &v86;
+	int error;
 
 	if (current->saved_kernel_stack)
 		return -EPERM;
+	/* v86 must be readable (now) and writable (for save_v86_state) */
+	error = verify_area(VERIFY_WRITE,v86,sizeof(*v86));
+	if (error)
+		return error;
 	memcpy_fromfs(&info,v86,sizeof(info));
 /*
  * make sure the vm86() system call doesn't try to do anything silly

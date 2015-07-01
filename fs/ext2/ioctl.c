@@ -17,11 +17,14 @@
 int ext2_ioctl (struct inode * inode, struct file * filp, unsigned int cmd,
 		unsigned long arg)
 {
+	int err;
 
 	ext2_debug ("cmd = %u, arg = %lu\n", cmd, arg);
 
 	switch (cmd) {
 	case EXT2_IOC_GETFLAGS:
+		if ((err = verify_area (VERIFY_WRITE, (long *) arg, sizeof(long))))
+			return err;
 		put_fs_long (inode->u.ext2_i.i_flags, (long *) arg);
 		return 0;
 	case EXT2_IOC_SETFLAGS:
@@ -34,6 +37,8 @@ int ext2_ioctl (struct inode * inode, struct file * filp, unsigned int cmd,
 		inode->i_dirt = 1;
 		return 0;
 	case EXT2_IOC_GETVERSION:
+		if ((err = verify_area (VERIFY_WRITE, (long *) arg, sizeof(long))))
+			return err;
 		put_fs_long (inode->u.ext2_i.i_version, (long *) arg);
 		return 0;
 	case EXT2_IOC_SETVERSION:

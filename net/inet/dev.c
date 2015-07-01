@@ -745,6 +745,9 @@ dev_ifconf(char *arg)
   memcpy_fromfs(&ifc, arg, sizeof(struct ifconf));
   len = ifc.ifc_len;
   pos = ifc.ifc_buf;
+  err=verify_area(VERIFY_WRITE, pos, len);
+  if(err)
+	return err;
 
   /* Loop over the interfaces, and write an info block for each. */
   for (dev = dev_base; dev != NULL; dev = dev->next) {

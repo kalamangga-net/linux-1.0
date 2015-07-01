@@ -1102,9 +1102,9 @@ slip_ioctl(struct tty_struct *tty, void *file, int cmd, void *arg)
   DPRINTF((DBG_SLIP, "SLIP: ioctl(%d, 0x%X, 0x%X)\n", tty->line, cmd, arg));
   switch(cmd) {
 	case SIOCGIFNAME:
-		err=verify_area(VERIFY_WRITE, arg, 16);
+		err=verify_area(VERIFY_WRITE, arg, strlen(sl->dev->name) + 1);
 		if(err)
-			return -err;
+			return err;
 		memcpy_tofs(arg, sl->dev->name, strlen(sl->dev->name) + 1);
 		return(0);
 	case SIOCGIFENCAP:

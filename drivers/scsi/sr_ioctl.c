@@ -95,7 +95,7 @@ int sr_ioctl(struct inode * inode, struct file * file, unsigned int cmd, unsigne
         u_char 	sr_cmd[10];
 
 	int dev = inode->i_rdev;
-	int result, target;
+	int result, target, err;
 
 	target = MINOR(dev);
 	if (target >= NR_SR) return -ENXIO;
@@ -192,7 +192,9 @@ int sr_ioctl(struct inode * inode, struct file * file, unsigned int cmd, unsigne
 
 			scsi_free(buffer, 512);
 
-			verify_area (VERIFY_WRITE, (void *) arg, sizeof (struct cdrom_tochdr));
+			err = verify_area (VERIFY_WRITE, (void *) arg, sizeof (struct cdrom_tochdr));
+			if (err)
+				return err;
 			memcpy_tofs ((void *) arg, &tochdr, sizeof (struct cdrom_tochdr));
 			
 			return result;
@@ -230,7 +232,9 @@ int sr_ioctl(struct inode * inode, struct file * file, unsigned int cmd, unsigne
 
 			scsi_free(buffer, 512);
 
-			verify_area (VERIFY_WRITE, (void *) arg, sizeof (struct cdrom_tocentry));
+			err = verify_area (VERIFY_WRITE, (void *) arg, sizeof (struct cdrom_tocentry));
+			if (err)
+				return err;
 			memcpy_tofs ((void *) arg, &tocentry, sizeof (struct cdrom_tocentry));
 
 			return result;
@@ -369,7 +373,9 @@ int sr_ioctl(struct inode * inode, struct file * file, unsigned int cmd, unsigne
 
 			  scsi_free(buffer, 512);
 
-			  verify_area (VERIFY_WRITE, (void *) arg, sizeof (struct cdrom_subchnl));
+			  err = verify_area (VERIFY_WRITE, (void *) arg, sizeof (struct cdrom_subchnl));
+			  if (err)
+				  return err;
 			  memcpy_tofs ((void *) arg, &subchnl, sizeof (struct cdrom_subchnl));
 			  return result;
 			}

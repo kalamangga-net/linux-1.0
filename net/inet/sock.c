@@ -428,7 +428,7 @@ destroy_sock(struct sock *sk)
    * structure, otherwise we need to keep it around until
    * everything is gone.
    */
-	  if (sk->rmem_alloc == 0 && sk->wmem_alloc == 0) 
+	  if (sk->dead && sk->rmem_alloc == 0 && sk->wmem_alloc == 0) 
 	  {
 		kfree_s((void *)sk,sizeof(*sk));
 	  } 
@@ -1197,7 +1197,7 @@ inet_accept(struct socket *sock, struct socket *newsock, int flags)
   if (newsock->data) {
   	struct sock * sk = (struct sock *) newsock->data;
   	newsock->data = NULL;
-  	kfree_s(sk, sizeof(struct sock));
+  	destroy_sock(sk);
   }
 
   if (sk1->prot->accept == NULL) return(-EOPNOTSUPP);

@@ -1000,7 +1000,9 @@ static struct sk_buff *ip_defrag(struct iphdr *iph, struct sk_buff *skb, struct 
    	DPRINTF((DBG_IP, "    DEV=%s, MTU=%d, LEN=%d SRC=%s",
  		dev->name, dev->mtu, left, in_ntoa(iph->saddr)));
    	DPRINTF((DBG_IP, " DST=%s\n", in_ntoa(iph->daddr)));
- 
+
+	if (mtu < 8)
+		return;
    	/* Check for any "DF" flag. */
    	if (ntohs(iph->frag_off) & IP_DF) 
    	{

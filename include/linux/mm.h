@@ -73,6 +73,25 @@ extern unsigned long __zero_page(void);
 #define BAD_PAGE __bad_page()
 #define ZERO_PAGE __zero_page()
 
+/* planning stage.. */
+#define P_DIRTY		0x0001
+#define P_LOCKED	0x0002
+#define P_UPTODATE	0x0004
+#define P_RESERVED	0x8000
+
+struct page_info {
+	unsigned short flags;
+	unsigned short count;
+	struct inode * inode;
+	unsigned long offset;
+	struct page_info * next_same_inode;
+	struct page_info * prev_same_inode;
+	struct page_info * next_hash;
+	struct page_info * prev_hash;
+	struct wait_queue *wait;
+};
+/* end of planning stage */
+
 extern volatile short free_page_ptr; /* used by malloc and tcp/ip. */
 
 extern int nr_swap_pages;
@@ -189,7 +208,7 @@ extern unsigned short * mem_map;
 
 
 /* vm_ops not present page codes */
-#define SHM_SWP_TYPE 0x41        
+#define SHM_SWP_TYPE 0x41
 extern void shm_no_page (ulong *);
 
 #endif

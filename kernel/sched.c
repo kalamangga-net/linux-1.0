@@ -772,7 +772,7 @@ asmlinkage int sys_nice(long increment)
 
 static void show_task(int nr,struct task_struct * p)
 {
-	int free;
+	unsigned long free;
 	static char * stat_nam[] = { "R", "S", "D", "Z", "T", "W" };
 
 	printk("%-8s %3d ", p->comm, (p == current) ? -nr : nr);
