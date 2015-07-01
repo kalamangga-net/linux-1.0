@@ -87,6 +87,7 @@ extern char emulating;
 #define PREFIX_FS_ 4
 #define PREFIX_GS_ 5
 #define PREFIX_SS_ 6
+#define PREFIX_DEFAULT 7
 
 /* These are to defeat the default action, giving the instruction
    no net effect: */

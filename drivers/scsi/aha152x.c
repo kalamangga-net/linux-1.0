@@ -1,6 +1,6 @@
 /* aha152x.c -- Adaptec AHA-152x driver
  * Author: Juergen E. Fischer, fischer@server.et-inf.fho-emden.de
- * Copyright 1993 Juergen E. Fischer
+ * Copyright 1993, 1994 Juergen E. Fischer
  *
  *
  * This driver is based on
@@ -20,10 +20,17 @@
  * General Public License for more details.
  
  *
- * $Id: aha152x.c,v 0.101 1993/12/13 01:16:27 root Exp $
+ * $Id: aha152x.c,v 1.0 1994/03/25 12:52:00 root Exp $
  *
 
  * $Log: aha152x.c,v $
+ * Revision 1.0  1994/03/25  12:52:00  root
+ * - Fixed "more data than expected" problem
+ * - added new BIOS signatures
+ *
+ * Revision 0.102  1994/01/31  20:44:12  root
+ * - minor changes in insw/outsw handling
+ *
  * Revision 0.101  1993/12/13  01:16:27  root
  * - fixed STATUS phase (non-GOOD stati were dropped sometimes;
  *   fixes problems with CD-ROM sector size detection & media change)
@@ -189,7 +196,7 @@
 /* I use this when I'm looking for weird bugs */
 #define DEBUG_TIMING 
 
-#if defined(DEBUG)
+#if defined(DEBUG_AHA152X)
 
 #undef  SKIP_PORTS              /* don't display ports */
 
@@ -228,7 +235,7 @@
 #define P_BUSFREE  1
 #define P_PARITY   2
 
-char *aha152x_id = "Adaptec 152x SCSI driver; $Revision: 0.101 $\n";
+static char *aha152x_id = AHA152X_REVID;
 
 static int port_base      = 0;
 static int this_host      = 0;
@@ -308,27 +315,26 @@ static unsigned short ports[] =
 /* possible interrupt channels */
 static unsigned short ints[] = { 9, 10, 11, 12 };
 
-/* signatures for various AIC-6260 based controllers */
+/* signatures for various AIC-6[23]60 based controllers.
+   The point in detecting signatures is to avoid useless
+   and maybe harmful probes on ports. I'm not sure that
+   all listed boards pass auto-configuration. For those
+   which fail the BIOS signature is obsolete, because
+   user intervention to supply the configuration is 
+   needed anyway. */
 static struct signature {
   char *signature;
   int  sig_offset;
   int  sig_length;
 } signatures[] =
 {
-  {
-    "Adaptec AHA-1520 BIOS\r\n\0\
-Version 1.4      \r\n\0\
-Copyright 1990 Adaptec, Inc.\r\n\
-All Rights Reserved\r\n \r\n \r\n", 0x102e, 101
-  },                                                          /* Adaptec 152x */
-  {
-    "Adaptec ASW-B626 BIOS\r\n\0\
-Version 1.0      \r\n\0\
-Copyright 1990 Adaptec, Inc.\r\n\
-All Rights Reserved\r\n\0 \r\n \r\n", 0x1029, 102
-  },                                                   /* on-board controller */
-  { "Adaptec BIOS: ASW-B626", 0x0F, 22},               /* on-board controller */
-  { "Adaptec ASW-B626 S2 BIOS", 0x2e6c, 24},           /* on-board controller */
+  { "Adaptec AHA-1520 BIOS",      0x102e, 21 },  /* Adaptec 152x */
+  { "Adaptec ASW-B626 BIOS",      0x1029, 21 },  /* on-board controller */
+  { "Adaptec BIOS: ASW-B626",       0x0f, 22 },  /* on-board controller */
+  { "Adaptec ASW-B626 S2",        0x2e6c, 19 },  /* on-board controller */
+  { "Adaptec BIOS:AIC-6360",         0xc, 21 },  /* on-board controller */
+  { "ScsiPro SP-360 BIOS",        0x2873, 19 },  /* ScsiPro-Controller with AIC-6360 */
+  { "GA-400 LOCAL BUS SCSI BIOS", 0x102e, 26 },  /* Gigabyte Local-Bus-SCSI */
 };
 #define SIGNATURE_COUNT (sizeof( signatures ) / sizeof( struct signature ))
 
@@ -498,11 +504,9 @@ int aha152x_detect(int hostno)
   enter_driver("detect");
 #endif
   
-  printk("aha152x: Probing: ");
-
   if(setup_called)
     {
-      printk("processing commandline: ");
+      printk("aha152x: processing commandline: ");
    
       if(setup_called!=4)
         {
@@ -551,12 +555,11 @@ int aha152x_detect(int hostno)
           printk("reconnect %d should be 0 or 1\n", can_disconnect);
           panic("aha152x panics in line %d", __LINE__);
         }
-      printk("ok, ");
+      printk("ok\n");
     }
   else
     {
 #if !defined(SKIP_BIOSTEST)
-      printk("BIOS test: ");
       ok=0;
       for( i=0; i < ADDRESS_COUNT && !ok; i++)
         for( j=0; (j < SIGNATURE_COUNT) && !ok; j++)
@@ -572,7 +575,9 @@ int aha152x_detect(int hostno)
           printk("failed\n");
           return 0;
         }
-      printk("ok, ");
+      printk("aha152x: BIOS test: passed, ");
+#else
+      printk("aha152x: ");
 #endif /* !SKIP_BIOSTEST */
  
 #if !defined(PORTBASE)
@@ -685,14 +690,6 @@ int aha152x_detect(int hostno)
  */
 const char *aha152x_info(void)
 {
-#if defined(DEBUG_RACE)
-  enter_driver("info");
-  leave_driver("info");
-#else
-#if defined(DEBUG_INFO)
-  printk("\naha152x: info()\n");
-#endif
-#endif
   return(aha152x_id);
 }
 
@@ -791,7 +788,7 @@ int aha152x_abort( Scsi_Cmnd *SCpnt, int code )
   cli();
 
 #if defined(DEBUG_ABORT)
-  printk("aha152x: abort(), SCpnt=0x%08x, ", (unsigned long) SCpnt );
+  printk("aha152x: abort(), SCpnt=0x%08x, ", (unsigned int) SCpnt );
 #endif
 
   show_queues();
@@ -962,16 +959,8 @@ int aha152x_reset(Scsi_Cmnd * __unused)
  */
 int aha152x_biosparam( int size, int dev, int *info_array )
 {
-#if defined(DEBUG_RACE)
-  enter_driver("biosparam");
-#else
 #if defined(DEBUG_BIOSPARAM)
-  printk("\naha152x: biosparam(), ");
-#endif
-#endif
-
-#if defined(DEBUG_BIOSPARAM)
-  printk("dev=%x, size=%d, ", dev, size);
+  printk("aha152x_biosparam: dev=%x, size=%d, ", dev, size);
 #endif
   
 /* I took this from other SCSI drivers, since it provides
@@ -986,9 +975,6 @@ int aha152x_biosparam( int size, int dev, int *info_array )
   printk("WARNING: check, if the bios geometry is correct.\n");
 #endif
 
-#if defined(DEBUG_RACE)
-  leave_driver("biosparam");
-#endif
   return 0;
 }
 
@@ -1708,7 +1694,7 @@ void aha152x_intr( int irqno )
               ;
 
             if( TESTHI( DMASTAT, DFIFOFULL ) )
-              fifodata=132;
+              fifodata=GETPORT(FIFOSTAT);
             else
               {
                 /* wait for SCSI fifo to get empty */
@@ -1786,13 +1772,18 @@ void aha152x_intr( int irqno )
                   } 
               }
  
-            /* rare (but possible) status bytes (probably also DISCONNECT 
-               messages) get transfered in the data phase, so I assume 1
-               additional byte is ok */
-            if(fifodata>1)
+            /*
+             * Fifo should be empty
+             */
+            if(fifodata>0)
               {
                 printk("aha152x: more data than expected (%d bytes)\n",
                        GETPORT(FIFOSTAT));
+                SETBITS(DMACNTRL0, _8BIT );
+                printk("aha152x: data ( ");
+                while(fifodata--)
+                  printk("%2x ", GETPORT( DATAPORT ));
+                printk(")\n");
               }
 
 #if defined(DEBUG_DATAI)
@@ -2302,7 +2293,7 @@ static void show_command(Scsi_Cmnd *ptr)
   int i;
 
   printk("0x%08x: target=%d; lun=%d; cmnd=( ",
-         (unsigned long) ptr, ptr->target, ptr->lun);
+         (unsigned int) ptr, ptr->target, ptr->lun);
   
   for(i=0; i<COMMAND_SIZE(ptr->cmnd[0]); i++)
     printk("%02x ", ptr->cmnd[i]);
@@ -2346,7 +2337,7 @@ static void show_command(Scsi_Cmnd *ptr)
       if(ptr->SCp.phase & (1<<16))
         printk("; phaseend");
     }
-  printk("; next=0x%08x\n", (unsigned long) ptr->host_scribble);
+  printk("; next=0x%08x\n", (unsigned int) ptr->host_scribble);
 }
  
 /*

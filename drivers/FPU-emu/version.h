@@ -9,5 +9,5 @@
  |                                                                           |
  +---------------------------------------------------------------------------*/
 
-#define FPU_VERSION "wm-FPU-emu version Beta 1.10"
+#define FPU_VERSION "wm-FPU-emu version Beta 1.11"
 

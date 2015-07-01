@@ -1,6 +1,6 @@
 VERSION = 1
 PATCHLEVEL = 0
-SUBLEVEL = 4
+SUBLEVEL = 5
 
 all:	Version zImage
 
@@ -74,6 +74,7 @@ LD86	=ld86 -0
 
 AS	=as
 LD	=ld
+LDFLAGS	=#-qmagic
 HOSTCC	=gcc
 CC	=gcc -D__KERNEL__
 MAKE	=make

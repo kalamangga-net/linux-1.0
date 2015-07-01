@@ -95,28 +95,51 @@ static void aha1542_stat(void)
   printk("status=%x intrflags=%x\n", s, i, WAITnexttimeout-WAITtimeout); */
 }
 
+/* This is a bit complicated, but we need to make sure that an interrupt
+   routine does not send something out while we are in the middle of this.
+   Fortunately, it is only at boot time that multi-byte messages
+   are ever sent. */
 static int aha1542_out(unsigned int base, unchar *cmdp, int len)
 {
+  if(len == 1) {
+    while(1==1){
+	WAIT(STATUS(base), CDF, 0, CDF);
+	cli();
+	if(inb(STATUS(base)) & CDF) {sti(); continue;}
+	outb(*cmdp, DATA(base));
+	sti();
+	return 0;
+      }
+  } else {
+    cli();
     while (len--)
       {
-	  WAIT(STATUS(base), CDF, 0, CDF);
-	  outb(*cmdp++, DATA(base));
+	WAIT(STATUS(base), CDF, 0, CDF);
+	outb(*cmdp++, DATA(base));
       }
+    sti();
+  }
     return 0;
   fail:
+  sti();
     printk("aha1542_out failed(%d): ", len+1); aha1542_stat();
     return 1;
 }
 
+/* Only used at boot time, so we do not need to worry about latency as much
+   here */
 static int aha1542_in(unsigned int base, unchar *cmdp, int len)
 {
+    cli();
     while (len--)
       {
 	  WAIT(STATUS(base), DF, DF, 0);
 	  *cmdp++ = inb(DATA(base));
       }
+    sti();
     return 0;
   fail:
+    sti();
     printk("aha1542_in failed(%d): ", len+1); aha1542_stat();
     return 1;
 }

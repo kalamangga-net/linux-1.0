@@ -200,6 +200,7 @@ struct inode {
 		struct nfs_inode_info nfs_i;
 		struct xiafs_inode_info xiafs_i;
 		struct sysv_inode_info sysv_i;
+		void * generic_ip;
 	} u;
 };
 
@@ -260,6 +261,7 @@ struct super_block {
 		struct nfs_sb_info nfs_sb;
 		struct xiafs_sb_info xiafs_sb;
 		struct sysv_sb_info sysv_sb;
+		void *generic_sbp;
 	} u;
 };
 

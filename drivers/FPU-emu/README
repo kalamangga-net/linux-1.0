@@ -47,7 +47,7 @@ Please report bugs, etc to me at:
 
 
 --Bill Metzenthen
-  Feb 1994
+  March 1994
 
 
 ----------------------- Internals of wm-FPU-emu -----------------------
@@ -92,7 +92,7 @@ is confined to five files:
 ----------------------- Limitations of wm-FPU-emu -----------------------
 
 There are a number of differences between the current wm-FPU-emu
-(version beta 1.10) and the 80486 FPU (apart from bugs). Some of the
+(version beta 1.11) and the 80486 FPU (apart from bugs). Some of the
 more important differences are listed below:
 
 The Roundup flag does not have much meaning for the transcendental
@@ -143,6 +143,17 @@ instruction is executed. The emulator will be invoked but will not be
 able to find the instruction which caused the device-not-present
 exception. For this case, the emulator cannot emulate the behaviour of
 an 80486DX.
+
+Handling of the address size override prefix byte (0x67) has not been
+extensively tested yet. A major problem exists because using it in
+vm86 mode can cause a general protection fault. Address offsets
+greater than 0xffff appear to be illegal in vm86 mode but are quite
+acceptable (and work) in real mode. A small test program developed to
+check the addressing, and which runs successfully in real mode,
+crashes dosemu under Linux and also brings Windows down with a general
+protection fault message when run under the MS-DOS prompt of Windows
+3.1. (The program simply reads data from a valid address).
+
 
 ----------------------- Performance of wm-FPU-emu -----------------------
 
@@ -310,6 +321,7 @@ cae@jpmorgan.com
 Hamish Coleman, t933093@minyos.xx.rmit.oz.au
 Bruce Evans, bde@kralizec.zeta.org.au
 Timo Korvola, Timo.Korvola@hut.fi
+Rick Lyons, rick@razorback.brisnet.org.au
  
 ...and numerous others who responded to my request for help with
 a real 80486.

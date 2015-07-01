@@ -201,7 +201,7 @@ asmlinkage void do_IRQ(int irq, struct pt_regs * regs)
 {
 	struct sigaction * sa = irq + irq_sigaction;
 
-	kstat.interrupts++;
+	kstat.interrupts[irq]++;
 	sa->sa_handler((int) regs);
 }
 
@@ -214,7 +214,7 @@ asmlinkage void do_fast_IRQ(int irq)
 {
 	struct sigaction * sa = irq + irq_sigaction;
 
-	kstat.interrupts++;
+	kstat.interrupts[irq]++;
 	sa->sa_handler(irq);
 }
 

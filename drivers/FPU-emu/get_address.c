@@ -45,7 +45,8 @@ static int reg_offset_vm86[] = {
 	offsetof(struct info,___vm86_es),
 	offsetof(struct info,___vm86_fs),
 	offsetof(struct info,___vm86_gs),
-	offsetof(struct info,___ss)
+	offsetof(struct info,___ss),
+	offsetof(struct info,___vm86_ds)
       };
 
 #define VM86_REG_(x) (*(unsigned short *) \
@@ -285,9 +286,13 @@ void get_address_16(unsigned char FPU_modrm, unsigned long *fpu_eip,
       break;
     case 2:
       offset += FPU_info->___ebp + FPU_info->___esi;
+      if ( addr_modes.override.segment == PREFIX_DEFAULT )
+	addr_modes.override.segment = PREFIX_SS_;
       break;
     case 3:
       offset += FPU_info->___ebp + FPU_info->___edi;
+      if ( addr_modes.override.segment == PREFIX_DEFAULT )
+	addr_modes.override.segment = PREFIX_SS_;
       break;
     case 4:
       offset += FPU_info->___esi;
@@ -297,6 +302,8 @@ void get_address_16(unsigned char FPU_modrm, unsigned long *fpu_eip,
       break;
     case 6:
       offset += FPU_info->___ebp;
+      if ( addr_modes.override.segment == PREFIX_DEFAULT )
+	addr_modes.override.segment = PREFIX_SS_;
       break;
     case 7:
       offset += FPU_info->___ebx;
@@ -313,4 +320,3 @@ void get_address_16(unsigned char FPU_modrm, unsigned long *fpu_eip,
 
   FPU_data_address = (void *)offset ;
 }
-

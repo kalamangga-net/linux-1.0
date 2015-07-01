@@ -487,7 +487,10 @@ int tty_ioctl(struct inode * inode, struct file * file,
 					     sizeof (pid_t));
 			if (retval)
 				return retval;
-			if (current->tty != termios_dev)
+			/* If a master pty, return the slave's tpgid.
+			   If not, only return the tpgid if this is
+			   the controlling tty. */
+			if (tty == termios_tty && current->tty != dev)
 				return -ENOTTY;
 			put_fs_long(termios_tty->pgrp, (pid_t *) arg);
 			return 0;

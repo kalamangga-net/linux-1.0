@@ -120,6 +120,7 @@ extern unsigned long scsi_dev_init(unsigned long, unsigned long);
 #define MAX_INIT_ARGS 8
 #define MAX_INIT_ENVS 8
 #define COMMAND_LINE ((char *) (PARAM+2048))
+#define COMMAND_LINE_SIZE 256
 
 extern void time_init(void);
 
@@ -149,7 +150,7 @@ int root_mountflags = 0;
 
 static char fpu_error = 0;
 
-static char command_line[80] = { 0, };
+static char command_line[COMMAND_LINE_SIZE] = { 0, };
 
 char *get_options(char *str, int *ints) 
 {
@@ -329,12 +330,19 @@ static void parse_options(char *line)
 static void copy_options(char * to, char * from)
 {
 	char c = ' ';
+	int len = 0;
 
-	do {
-		if (c == ' ' && !memcmp("mem=", from, 4))
+	for (;;) {
+		if (c == ' ' && *(unsigned long *)from == *(unsigned long *)"mem=")
 			memory_end = simple_strtoul(from+4, &from, 0);
-		c = *(to++) = *(from++);
-	} while (c);
+		c = *(from++);
+		if (!c)
+			break;
+		if (COMMAND_LINE_SIZE <= ++len)
+			break;
+		*(to++) = c;
+	}
+	*to = '\0';
 }
 
 static void copro_timeout(void)

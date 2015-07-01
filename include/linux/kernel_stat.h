@@ -14,7 +14,7 @@ struct kernel_stat {
 	unsigned int dk_drive[DK_NDRIVE];
 	unsigned int pgpgin, pgpgout;
 	unsigned int pswpin, pswpout;
-	unsigned int interrupts;
+	unsigned int interrupts[16];
 	unsigned int ipackets, opackets;
 	unsigned int ierrors, oerrors;
 	unsigned int collisions;

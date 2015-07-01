@@ -510,7 +510,7 @@ int fdomain_16x0_detect( int hostnum )
 	 port_base = ports[i];
 	 if (check_region( port_base, 0x10 )) {
 #if DEBUG_DETECT
-	    printf( " (%x inuse),", port_base );
+	    printk( " (%x inuse),", port_base );
 #endif
 	    continue;
 	 }
