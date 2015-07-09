@@ -42,9 +42,12 @@ struct request {
  * This is used in the elevator algorithm: Note that
  * reads always go before writes. This is natural: reads
  * are much more time-critical than writes.
+ *
+ * Update: trying with writes being preferred due to test
+ * by Alessandro Rubini..
  */
 #define IN_ORDER(s1,s2) \
-((s1)->cmd < (s2)->cmd || ((s1)->cmd == (s2)->cmd && \
+((s1)->cmd > (s2)->cmd || ((s1)->cmd == (s2)->cmd && \
 ((s1)->dev < (s2)->dev || (((s1)->dev == (s2)->dev && \
 (s1)->sector < (s2)->sector)))))
 

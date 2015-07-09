@@ -151,7 +151,6 @@ void * kmalloc (size_t size, int priority)
 	int order,tries,i,sz;
 	struct block_header *p;
 	struct page_descriptor *page;
-	extern unsigned long intr_count;
 
 /* Sanity check... */
 	if (intr_count && priority != GFP_ATOMIC) {

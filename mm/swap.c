@@ -585,7 +585,6 @@ last_free_pages[index = (index + 1) & (NR_LAST_FREE_PAGES - 1)] = result; \
  */
 unsigned long __get_free_page(int priority)
 {
-	extern unsigned long intr_count;
 	unsigned long result, flag;
 	static unsigned long index = 0;
 

@@ -241,10 +241,7 @@ static int ext2_file_write (struct inode * inode, struct file * filp,
 			      inode->i_mode);
 		return -EINVAL;
 	}
-/*
- * ok, append may not work when many processes are writing at the same time
- * but so what. That way leads to madness anyway.
- */
+	down(&inode->i_sem);
 	if (filp->f_flags & O_APPEND)
 		pos = inode->i_size;
 	else
@@ -283,6 +280,7 @@ static int ext2_file_write (struct inode * inode, struct file * filp,
 		bh->b_dirt = 1;
 		brelse (bh);
 	}
+	up(&inode->i_sem);
 	inode->i_ctime = inode->i_mtime = CURRENT_TIME;
 	filp->f_pos = pos;
 	inode->i_dirt = 1;

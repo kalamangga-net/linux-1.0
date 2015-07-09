@@ -4,7 +4,15 @@
  *  Copyright (C) 1992  by Linus Torvalds
  *  based on ideas by Darren Senn
  *
- *  stat,statm extensions by Michael K. Johnson, johnsonm@stolaf.edu
+ * Fixes:
+ * Michael. K. Johnson: stat,statm extensions.
+ *                      <johnsonm@stolaf.edu>
+ *
+ * Pauline Middelink :  Made cmdline,envline only break at '\0's, to
+ *                      make sure SET_PROCTITLE works. Also removed
+ *                      bad '!' which forced addres recalculation for
+ *                      EVERY character on the current page.
+ *                      <middelin@calvin.iaf.nl>
  */
 
 #include <linux/types.h>
@@ -98,7 +106,7 @@ static int get_kstat(char * buffer)
 		"disk %u %u %u %u\n"
 		"page %u %u\n"
 		"swap %u %u\n"
-		"%u",
+		"intr %u",
 		kstat.cpu_user,
 		kstat.cpu_nice,
 		kstat.cpu_system,
@@ -177,12 +185,12 @@ static unsigned long get_phys_addr(struct task_struct ** p, unsigned long ptr)
 	if (!p || !*p || ptr >= TASK_SIZE)
 		return 0;
 	page = *PAGE_DIR_OFFSET((*p)->tss.cr3,ptr);
-	if (!(page & 1))
+	if (!(page & PAGE_PRESENT))
 		return 0;
 	page &= PAGE_MASK;
 	page += PAGE_PTR(ptr);
 	page = *(unsigned long *) page;
-	if (!(page & 1))
+	if (!(page & PAGE_PRESENT))
 		return 0;
 	page &= PAGE_MASK;
 	page += ptr & ~PAGE_MASK;
@@ -200,7 +208,7 @@ static int get_array(struct task_struct ** p, unsigned long start, unsigned long
 	for (;;) {
 		addr = get_phys_addr(p, start);
 		if (!addr)
-			return result;
+			goto ready;
 		do {
 			c = *(char *) addr;
 			if (!c)
@@ -208,13 +216,18 @@ static int get_array(struct task_struct ** p, unsigned long start, unsigned long
 			if (size < PAGE_SIZE)
 				buffer[size++] = c;
 			else
-				return result;
+				goto ready;
 			addr++;
 			start++;
-			if (start >= end)
-				return result;
-		} while (!(addr & ~PAGE_MASK));
+			if (!c && start >= end)
+				goto ready;
+		} while (addr & ~PAGE_MASK);
 	}
+ready:
+	/* remove the trailing blanks, used to fillout argv,envp space */
+	while (result>0 && buffer[result-1]==' ')
+		result--;
+	return result;
 }
 
 static int get_env(int pid, char * buffer)

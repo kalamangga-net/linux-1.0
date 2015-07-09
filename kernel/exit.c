@@ -355,6 +355,10 @@ NORET_TYPE void do_exit(long code)
 	struct task_struct *p;
 	int i;
 
+	if (intr_count) {
+		printk("Aiee, killing interrupt handler\n");
+		intr_count = 0;
+	}
 fake_volatile:
 	if (current->semun)
 		sem_exit();

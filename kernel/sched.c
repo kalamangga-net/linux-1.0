@@ -217,6 +217,10 @@ asmlinkage void schedule(void)
 
 /* check alarm, wake up any interruptible tasks that have got a signal */
 
+	if (intr_count) {
+		printk("Aiee: scheduling in interrupt\n");
+		intr_count = 0;
+	}
 	cli();
 	ticks = itimer_ticks;
 	itimer_ticks = 0;

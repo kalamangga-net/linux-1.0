@@ -95,17 +95,20 @@ int el3_probe(struct device *dev)
 	/* First check for a board on the EISA bus. */
 	if (EISA_bus) {
 		for (ioaddr = 0x1000; ioaddr < 0x9000; ioaddr += 0x1000) {
-			if (inw(ioaddr) != 0x6d50)
+			/* Check the standard EISA ID register for an encoded '3Com'. */
+			if (inw(ioaddr + 0xC80) != 0x6d50)
 				continue;
+
+			/* Change the register set to the configuration window 0. */
+			outw(0x0800, ioaddr + 0xC80 + EL3_CMD);
 
 			irq = inw(ioaddr + 8) >> 12;
 			if_port = inw(ioaddr + 6)>>14;
 			for (i = 0; i < 3; i++)
 				phys_addr[i] = htons(read_eeprom(ioaddr, i));
 
-			/* Restore the "Manufacturer ID" to the EEPROM read register. */
-			/* The manual says to restore "Product ID" (reg. 3). !???! */
-			read_eeprom(ioaddr, 7);
+			/* Restore the "Product ID" to the EEPROM read register. */
+			read_eeprom(ioaddr, 3);
 
 			/* Was the EISA code an add-on hack?  Nahhhhh... */
 			goto found;

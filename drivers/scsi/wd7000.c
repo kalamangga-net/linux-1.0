@@ -120,13 +120,27 @@ static inline void delay( unsigned how_long )
 
 static inline int command_out(unchar *cmdp, int len)
 {
-    while (len--)  {
-        WAIT(ASC_STAT, STATMASK, CMD_RDY, 0);
-	outb(*cmdp++, COMMAND);
+  if(len == 1) {
+    while(1==1){
+      WAIT(ASC_STAT, STATMASK, CMD_RDY, 0);
+      cli();
+      if(!(inb(ASC_STAT) & CMD_RDY)) {sti(); continue;}
+      outb(*cmdp, COMMAND);
+      sti();
+      return 1;
     }
+  } else {
+    cli();
+    while (len--)  {
+      WAIT(ASC_STAT, STATMASK, CMD_RDY, 0);
+      outb(*cmdp++, COMMAND);
+    }
+    sti();
+  }
     return 1;
 
 fail:
+    sti();
     printk("wd7000_out WAIT failed(%d): ", len+1);
     return 0;
 }
@@ -189,6 +203,7 @@ static int mail_out( Scb *scbptr )
  */
 {
     int i, ogmb;
+    unsigned char start_cmd;
     unsigned long flags;
 
     DEB(printk("wd7000_scb_out: %06x");)
@@ -217,10 +232,11 @@ static int mail_out( Scb *scbptr )
         return 0;
     }
 
+    start_cmd = START_OGMB | ogmb;
+
     wd7000_enable_intr(); 
     do  {
-        WAIT(ASC_STAT,STATMASK,CMD_RDY,0);
-	outb(START_OGMB|ogmb, COMMAND);
+        command_out(&start_cmd, 1);
 	WAIT(ASC_STAT,STATMASK,CMD_RDY,0);
     }  while (inb(ASC_STAT) & CMD_REJ);
 

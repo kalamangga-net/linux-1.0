@@ -335,6 +335,7 @@ void ext2_truncate (struct inode * inode)
 		return;
 	ext2_discard_prealloc(inode);
 	while (1) {
+		down(&inode->i_sem);
 		retry = trunc_direct(inode);
 		retry |= trunc_indirect (inode, EXT2_IND_BLOCK,
 			(unsigned long *) &inode->u.ext2_i.i_data[EXT2_IND_BLOCK]);
@@ -342,6 +343,7 @@ void ext2_truncate (struct inode * inode)
 			EXT2_ADDR_PER_BLOCK(inode->i_sb),
 			(unsigned long *) &inode->u.ext2_i.i_data[EXT2_DIND_BLOCK]);
 		retry |= trunc_tindirect (inode);
+		up(&inode->i_sem);
 		if (!retry)
 			break;
 		if (IS_SYNC(inode) && inode->i_dirt)

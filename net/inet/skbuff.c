@@ -426,7 +426,6 @@ void kfree_skb(struct sk_buff *skb, int rw)
 struct sk_buff *alloc_skb(unsigned int size,int priority)
 {
 	struct sk_buff *skb;
-	extern unsigned long intr_count;
 
 	if (intr_count && priority != GFP_ATOMIC) {
 		static int count = 0;

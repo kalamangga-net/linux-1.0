@@ -21,6 +21,8 @@ extern int x86;
 extern int ignore_irq13;
 extern int wp_works_ok;
 
+extern unsigned long intr_count;
+
 /*
  * Bus types (default is ISA, but people can check others with these..)
  * MCA_bus hardcoded to 0 for now.

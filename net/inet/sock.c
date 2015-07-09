@@ -1197,6 +1197,7 @@ inet_accept(struct socket *sock, struct socket *newsock, int flags)
   if (newsock->data) {
   	struct sock * sk = (struct sock *) newsock->data;
   	newsock->data = NULL;
+  	sk->dead = 1;
   	destroy_sock(sk);
   }
 
