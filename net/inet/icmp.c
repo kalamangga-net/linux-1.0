@@ -285,6 +285,65 @@ icmp_echo(struct icmphdr *icmph, struct sk_buff *skb, struct device *dev,
 }
 
 
+/* Handle ICMP Timestamp requests. */
+static void
+icmp_timestamp(struct icmphdr *icmph, struct sk_buff *skb, struct device *dev,
+	  unsigned long saddr, unsigned long daddr, int len,
+	  struct options *opt)
+{
+  struct icmphdr *icmphr;
+  struct sk_buff *skb2;
+  int size, offset;
+  unsigned long *timeptr, midtime;
+  extern struct timeval xtime;			/* kernel/time.c */
+
+  size = sizeof(struct sk_buff) + dev->hard_header_len + 64 + len;
+  if (! (skb2 = alloc_skb(size, GFP_ATOMIC))) {
+    skb->sk = NULL;
+    kfree_skb(skb, FREE_READ);
+    return;
+  }
+  skb2->sk = NULL;
+  skb2->mem_addr = skb2;
+  skb2->mem_len = size;
+  skb2->free = 1;
+
+  /* Build Layer 2-3 headers for message back to source */
+  offset = ip_build_header(skb2, daddr, saddr, &dev, IPPROTO_ICMP, opt, len, 
+				skb->ip_hdr->tos, 255);
+  if (offset < 0) {
+    printk("ICMP: Could not build IP Header for ICMP TIMESTAMP Response\n");
+    kfree_skb(skb2, FREE_WRITE);
+    skb->sk = NULL;
+    kfree_skb(skb, FREE_READ);
+    return;
+  }
+
+  /* Re-adjust length according to actual IP header size. */
+  skb2->len = offset + len;
+
+  /* Build ICMP_TIMESTAMP Response message. */
+  icmphr = (struct icmphdr *) ((char *) (skb2 + 1) + offset);
+  memcpy((char *) icmphr, (char *) icmph, len);
+  icmphr->type = ICMP_TIMESTAMPREPLY;
+  icmphr->code = icmphr->checksum = 0;
+
+  /* fill in the current time as ms since midnight UT: */
+  midtime = (xtime.tv_sec % 86400) * 1000 + xtime.tv_usec / 1000;
+  timeptr = (unsigned long *) (icmphr + 1);
+  /* the originate timestamp (timeptr [0]) is still in the copy: */
+  timeptr [1] = timeptr [2] = htonl(midtime);
+
+  icmphr->checksum = ip_compute_csum((unsigned char *) icmphr, len);
+
+  /* Ship it out - free it when done */
+  ip_queue_xmit((struct sock *) NULL, dev, skb2, 1);
+
+  skb->sk = NULL;
+  kfree_skb(skb, FREE_READ);
+}
+
+
 /* Handle the ICMP INFORMATION REQUEST. */
 static void
 icmp_info(struct icmphdr *icmph, struct sk_buff *skb, struct device *dev,
@@ -397,6 +456,13 @@ icmp_rcv(struct sk_buff *skb1, struct device *dev, struct options *opt,
 		icmp_echo(icmph, skb1, dev, saddr, daddr, len, opt);
 		return 0;
 	case ICMP_ECHOREPLY:
+		skb1->sk = NULL;
+		kfree_skb(skb1, FREE_READ);
+		return(0);
+	case ICMP_TIMESTAMP:
+		icmp_timestamp(icmph, skb1, dev, saddr, daddr, len, opt);
+		return 0;
+	case ICMP_TIMESTAMPREPLY:
 		skb1->sk = NULL;
 		kfree_skb(skb1, FREE_READ);
 		return(0);
