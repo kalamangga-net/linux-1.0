@@ -1,10 +1,10 @@
 /* fdomain.c -- Future Domain TMC-16x0 SCSI driver
  * Created: Sun May  3 18:53:19 1992 by faith@cs.unc.edu
- * Revised: Fri Apr  1 23:47:55 1994 by faith@cs.unc.edu
+ * Revised: Thu Apr  7 20:30:09 1994 by faith@cs.unc.edu
  * Author: Rickard E. Faith, faith@cs.unc.edu
  * Copyright 1992, 1993, 1994 Rickard E. Faith
  *
- * $Id: fdomain.c,v 5.15 1994/04/02 04:48:04 root Exp $
+ * $Id: fdomain.c,v 5.16 1994/04/08 00:30:15 root Exp $
 
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
@@ -168,7 +168,7 @@
 #include <linux/string.h>
 #include <linux/ioport.h>
 
-#define VERSION          "$Revision: 5.15 $"
+#define VERSION          "$Revision: 5.16 $"
 
 /* START OF USER DEFINABLE OPTIONS */
 
@@ -281,6 +281,9 @@ static int               TMC_Cntl_port;
 static int               TMC_Status_port;
 static int               Write_FIFO_port;
 static int               Write_SCSI_Data_port;
+
+static int               FIFO_Size = 0x2000; /* 8k FIFO for
+						pre-tmc18c30 chips */
 
 extern void              fdomain_16x0_intr( int unused );
 
@@ -421,7 +424,10 @@ static int fdomain_is_valid_port( int port )
       outb( 0x80, port + IO_Control );
       if (inb( port + Configuration2 ) & 0x80 == 0x80) {
 	 outb( 0x00, port + IO_Control );
-	 if (inb( port + Configuration2 ) & 0x80 == 0x00) chip = tmc18c30;
+	 if (inb( port + Configuration2 ) & 0x80 == 0x00) {
+	    chip = tmc18c30;
+	    FIFO_Size = 0x800;	/* 2k FIFO */
+	 }
       }
 #else
 
@@ -429,7 +435,10 @@ static int fdomain_is_valid_port( int port )
                                    have problems.  Lets assume it is an
                                    18c30 if the RAM is disabled. */
 
-      if (inb( port + Configuration2 ) & 0x02) chip = tmc18c30;
+      if (inb( port + Configuration2 ) & 0x02) {
+	 chip      = tmc18c30;
+	 FIFO_Size = 0x800;	/* 2k FIFO */
+      }
 #endif
 				/* If that failed, we are an 18c50. */
    }
@@ -1127,7 +1136,7 @@ void fdomain_16x0_intr( int unused )
    }
 
    if (current_SC->SCp.have_data_in == -1) { /* DATA OUT */
-      while ( (data_count = 0x2000 - inw( FIFO_Data_Count_port )) > 512 ) {
+      while ( (data_count = FIFO_Size - inw( FIFO_Data_Count_port )) > 512 ) {
 #if EVERY_ACCESS
 	 printk( "DC=%d, ", data_count ) ;
 #endif
