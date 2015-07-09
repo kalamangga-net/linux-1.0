@@ -3407,7 +3407,6 @@ if (inet_debug == DBG_SLIP) printk("\rtcp_rcv: not in seq\n");
 	case TCP_SYN_RECV:
 		if (th->syn) {
 			/* Probably a retransmitted syn */
-			printk("syn while in TCP_SYN_RECV\n");
 			kfree_skb(skb, FREE_READ);
 			release_sock(sk);
 			return(0);

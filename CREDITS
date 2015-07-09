@@ -531,6 +531,14 @@ S: Obere Heerbergstrasse 17
 S: 97078 Wuerzburg
 S: Germany
 
+N: Patrick Volkerding
+E: volkerdi@ftp.cdrom.com
+D: Produced the Slackware distribution, updated the SVGAlib
+D: patches for ghostscript, worked on color 'ls', etc.
+S: 301 15th Street S.
+S: Moorhead, MN 56560
+S: USA 
+
 N: Juergen Weigert
 E: jnweiger@immd4.informatik.uni-erlangen.de
 D: The Linux Support Team Erlangen
