@@ -489,7 +489,7 @@ static void rs_interrupt(int irq)
 
 	rs_irq_triggered = irq;
 	rs_triggered |= 1 << irq;
-	
+
 	info = IRQ_ports[irq];
 	done = 1;
 	done_work = 0;
@@ -525,7 +525,7 @@ static void rs_interrupt(int irq)
 		serial_outp(info, UART_IER, 0);
 		serial_out(info, UART_IER, info->IER);
 #endif
-		
+
 		info = info->next_port;
 		if (!info && !done) {
 			info = IRQ_ports[irq];
@@ -535,13 +535,13 @@ static void rs_interrupt(int irq)
 		}
 	}
 	if ((info = IRQ_ports[irq]) != NULL) {
-#ifdef 0
+#if 0
 		do {
 			serial_outp(info, UART_IER, 0);
 			serial_out(info, UART_IER, info->IER);
 			info = info->next_port;
 		} while (info);
-#endif			
+#endif
 		if (irq && !done_work)
 			IRQ_timer[irq] = jiffies + 1500;
 		else
