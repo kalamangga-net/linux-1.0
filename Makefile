@@ -69,18 +69,18 @@ endif
 
 #RAMDISK = -DRAMDISK=512
 
-AS86	=as86 -0 -a
-LD86	=ld86 -0
+AS86	=i686-linux-gnu-as -0 -a
+LD86	=i686-linux-gnu-ld -0
 
-AS	=as
-LD	=ld
+AS	=i686-linux-gnu-as
+LD	=i686-linux-gnu-ld
 LDFLAGS	=#-qmagic
-HOSTCC	=gcc
-CC	=gcc -D__KERNEL__
+HOSTCC	=gcc-4.8
+CC	=gcc-4.8 -D__KERNEL__
 MAKE	=make
 CPP	=$(CC) -E
-AR	=ar
-STRIP	=strip
+AR	=i686-linux-gnu-ar
+STRIP	=i686-linux-gnu-strip
 
 ARCHIVES	=kernel/kernel.o mm/mm.o fs/fs.o net/net.o ipc/ipc.o
 FILESYSTEMS	=fs/filesystems.a
@@ -249,8 +249,8 @@ backup: mrproper
 
 depend dep:
 	touch tools/version.h
-	for i in init/*.c;do echo -n "init/";$(CPP) -M $$i;done > .tmpdepend
-	for i in tools/*.c;do echo -n "tools/";$(CPP) -M $$i;done >> .tmpdepend
+	for i in init/*.c;do echo -n "init/";$(CPP) -Iinclude/ -M $$i;done > .tmpdepend
+	for i in tools/*.c;do echo -n "tools/";$(CPP) -Iinclude/ -M $$i;done >> .tmpdepend
 	set -e; for i in $(SUBDIRS); do $(MAKE) -C $$i dep; done
 	rm -f tools/version.h
 	mv .tmpdepend .depend
@@ -297,3 +297,4 @@ disk:
 	@echo \"make zdisk\" instead.
 	@echo
 	@exit 1
+

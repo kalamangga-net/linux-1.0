@@ -43,7 +43,7 @@ ksyms.s: ksyms.sh ksyms.lst
 ksyms.o: ksyms.s
 
 dep:
-	$(CPP) -M *.c > .depend
+	$(CPP) -M *.c -I../include > .depend
 
 dummy:
 

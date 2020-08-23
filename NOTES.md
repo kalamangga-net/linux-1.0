@@ -16,15 +16,20 @@ This notes is for our R&D documentation.
 
 * 20150626: #1 commit
 * 20150710: Patch 1-9 done
+* 20200528: Notes + Patches
 
 ## Step
 
 * Make init
 * Patch to latest version
 * Check env
+* Test for `make config`'s passed
 
 ## To Do
 
 * Fixing makefiles based on env
 
+## Doing 
+
+* Test for `make depend`
 

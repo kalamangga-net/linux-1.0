@@ -36,7 +36,7 @@ driversubdirs: dummy
 	set -e; for i in $(SUBDIRS); do $(MAKE) -C $$i; done
 
 dep:
-	set -e; for i in $(SUBDIRS); do $(MAKE) -C $$i dep; done
+	set -e; for i in $(SUBDIRS); do $(MAKE) -I../include/ -C $$i dep; done
 
 dummy:
 

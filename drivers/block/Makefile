@@ -17,12 +17,12 @@
 	$(CC) $(CFLAGS) -c $<
 
 #
-# Note : at this point, these files are compiled on all systems. 
+# Note : at this point, these files are compiled on all systems.
 # In the future, some of these should be built conditionally.
 #
 
-OBJS := ll_rw_blk.o floppy.o ramdisk.o genhd.o 
-SRCS := ll_rw_blk.c floppy.c ramdisk.c genhd.c 
+OBJS := ll_rw_blk.o floppy.o ramdisk.o genhd.o
+SRCS := ll_rw_blk.c floppy.c ramdisk.c genhd.c
 
 ifdef CONFIG_CDU31A
 OBJS := $(OBJS) cdu31a.o
@@ -57,7 +57,7 @@ block.a: $(OBJS)
 	sync
 
 dep:
-	$(CPP) -M $(SRCS) > .depend
+	$(CPP) -I../../include/ -M $(SRCS) > .depend
 
 dummy:
 

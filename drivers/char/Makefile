@@ -59,7 +59,7 @@ SRCS := $(SRCS) psaux.c
 endif
 
 ifdef CONFIG_TAPE_QIC02
-OBJS := $(OBJS) tpqic02.o 
+OBJS := $(OBJS) tpqic02.o
 SRCS := $(SRCS) tpqic02.c
 endif
 
@@ -72,10 +72,10 @@ all: char.a
 
 char.a: $(OBJS)
 	$(AR) rcs char.a $(OBJS)
-	sync	
+	sync
 
 dep:
-	$(CPP) -M $(SRCS) > .depend
+	$(CPP) -I../../include/ -M $(SRCS) > .depend
 
 dummy:
 
