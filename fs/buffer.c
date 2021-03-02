@@ -105,7 +105,7 @@ repeat:
 	for (i = nr_buffers*2 ; i-- > 0 ; bh = bh->b_next_free) {
 		if (dev && bh->b_dev != dev)
 			continue;
-#ifdef 0 /* Disable bad-block debugging code */
+#if 0 /* Disable bad-block debugging code */
 		if (bh->b_req && !bh->b_lock &&
 		    !bh->b_dirt && !bh->b_uptodate)
 			printk ("Warning (IO error) - orphaned block %08x on %04x\n",
