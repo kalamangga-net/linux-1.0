@@ -23,7 +23,6 @@ all:	zSystem
 
 zSystem:	piggy.o $(zOBJECTS)
 		$(LD) $(LDFLAGS) -o zSystem -Ttext 1000 $(zOBJECTS) piggy.o
-		cat a.out.gz >> zSystem
 
 head.o:	head.s
 
@@ -32,6 +31,7 @@ head.s: head.S ../include/linux/tasks.h
 
 piggy.o:	$(SYSTEM) xtract piggyback
 		objcopy -O binary -j.text -j.data -j.rodata -j.bss $(SYSTEM) a.out
+		rm -f a.out.gz
 		gzip -9 a.out
 		$(CC) -c piggyback2.S -m32 -o piggy.o
 
