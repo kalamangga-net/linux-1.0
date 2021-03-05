@@ -50,7 +50,11 @@ SVGA_MODE=	-DSVGA_MODE=NORMAL_VGA
 # standard CFLAGS
 #
 
-CFLAGS = -m32 -Wall -Wstrict-prototypes -O2 -fomit-frame-pointer -pipe -fno-stack-protector  -fno-builtin  -I$(PWD)/include/ -std=gnu89 -w
+CFLAGS = -Wall -Wstrict-prototypes -O2  -fomit-frame-pointer -pipe \
+         -w -m32 -I$(PWD)/include/ -std=gnu89 \
+	 -fno-stack-protector -fno-builtin -mmanual-endbr \
+	 -fno-reorder-blocks-and-partition
+#-Wno-attribute-alias
 
 ifdef CONFIG_CPP
 CFLAGS := $(CFLAGS) -x c++
@@ -234,6 +238,7 @@ clean:
 	rm -f zBoot/zSystem zBoot/xtract zBoot/piggyback
 	rm -f .tmp* drivers/sound/configure
 	rm -f init/*.o tools/build boot/*.o tools/*.o
+	rm -f zBoot/a.out.gz
 
 mrproper: clean
 	rm -f include/linux/autoconf.h tools/version.h

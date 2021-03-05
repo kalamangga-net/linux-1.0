@@ -158,6 +158,18 @@ __ptr_t memcpy(__ptr_t __dest, __const __ptr_t __src,
 	for (i=0;i<__n;i++) d[i] = s[i];
 }
 
+
+//__ptr_t memcmp(__const __ptr_t __dest, __const __ptr_t __src,
+//			    size_t __n)
+int memcmp(const void * __dest, const void * __src, size_t __n)
+{
+	int i;
+	char *d = (char *)__dest, *s = (char *)__src;
+
+	for (i=0;i<__n;i++) if(d[i] != s[i]) return (int)(d[i]-s[i]);
+        return 0;
+}
+
 extern ulg crc_32_tab[];   /* crc table, defined below */
 
 /* ===========================================================================
