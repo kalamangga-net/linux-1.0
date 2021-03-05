@@ -61,7 +61,7 @@ int nr_secondary_pages = 0;
 unsigned long secondary_page_list = 0;
 
 #define copy_page(from,to) \
-__asm__("cld ; rep ; movsl": :"S" (from),"D" (to),"c" (1024):"cx","di","si")
+__asm__("cld ; rep ; movsl": :"S" (from),"D" (to),"c" (1024):)
 
 unsigned short * mem_map = NULL;
 
@@ -944,7 +944,7 @@ unsigned long __bad_pagetable(void)
 		:"a" (BAD_PAGE + PAGE_TABLE),
 		 "D" ((long) empty_bad_page_table),
 		 "c" (PTRS_PER_PAGE)
-		:"di","cx");
+		:);
 	return (unsigned long) empty_bad_page_table;
 }
 
@@ -956,7 +956,7 @@ unsigned long __bad_page(void)
 		:"a" (0),
 		 "D" ((long) empty_bad_page),
 		 "c" (PTRS_PER_PAGE)
-		:"di","cx");
+		:);
 	return (unsigned long) empty_bad_page;
 }
 
@@ -968,7 +968,7 @@ unsigned long __zero_page(void)
 		:"a" (0),
 		 "D" ((long) empty_zero_page),
 		 "c" (PTRS_PER_PAGE)
-		:"di","cx");
+		:);
 	return (unsigned long) empty_zero_page;
 }
 

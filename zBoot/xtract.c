@@ -15,7 +15,7 @@
 #include <sys/sysmacros.h>
 #include <unistd.h>	/* contains read/write */
 #include <fcntl.h>
-#include <a.out.h>
+#include <linux/a.out.h>
 #include <linux/config.h>
 
 #define GCC_HEADER 1024

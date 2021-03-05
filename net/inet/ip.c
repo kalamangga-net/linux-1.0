@@ -485,7 +485,7 @@ ip_compute_csum(unsigned char * buff, int len)
 	    	"adcw $0, %%bx"
 	        : "=b" (sum) , "=S" (buff)
 	        : "0" (sum), "c" (len >> 2) ,"1" (buff)
-	        : "ax", "cx", "si", "bx" );
+	        : "ax" );
   }
   if (len & 2) {
 	__asm__("lodsw\n\t"
@@ -493,7 +493,7 @@ ip_compute_csum(unsigned char * buff, int len)
 	    	"adcw $0, %%bx"
 	        : "=b" (sum), "=S" (buff)
 	        : "0" (sum), "1" (buff)
-	        : "bx", "ax", "si");
+	        : "ax");
   }
   if (len & 1) {
 	__asm__("lodsb\n\t"
@@ -502,7 +502,7 @@ ip_compute_csum(unsigned char * buff, int len)
 	    	"adcw $0, %%bx"
 	        : "=b" (sum), "=S" (buff)
 	        : "0" (sum), "1" (buff)
-	        : "bx", "ax", "si");
+	        : "ax");
   }
   sum =~sum;
   return(sum & 0xffff);

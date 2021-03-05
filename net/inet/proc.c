@@ -36,6 +36,7 @@
 #include <linux/un.h>
 #include <linux/in.h>
 #include <linux/param.h>
+#include <linux/string.h>
 #include "inet.h"
 #include "dev.h"
 #include "ip.h"

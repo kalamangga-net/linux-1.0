@@ -41,6 +41,8 @@ struct unix_proto_data {
 	struct unix_proto_data	*peerupd;
 	struct wait_queue *wait;	/* Lock across page faults (FvK) */
 	int		lock_flag;
+        struct unix_proto_data *data;
+
 };
 
 extern struct unix_proto_data unix_datas[NSOCKETS];
@@ -49,7 +51,7 @@ extern struct unix_proto_data unix_datas[NSOCKETS];
 #define last_unix_data		(unix_datas + NSOCKETS - 1)
 
 
-#define UN_DATA(SOCK) 		((struct unix_proto_data *)(SOCK)->data)
+#define UN_DATA(SOCK) 		(((struct unix_proto_data *)(SOCK))->data)
 #define UN_PATH_OFFSET		((unsigned long)((struct sockaddr_un *)0) \
 							->sun_path)
 

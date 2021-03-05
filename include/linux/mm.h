@@ -117,7 +117,7 @@ extern inline unsigned long get_free_page(int priority)
 		__asm__ __volatile__("rep ; stosl"
 			: /* no outputs */ \
 			:"a" (0),"c" (1024),"D" (page)
-			:"di","cx");
+			:);//stosl uses eax, es:edi, ecx - all listed in asm constraints
 	return page;
 }
 

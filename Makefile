@@ -50,16 +50,16 @@ SVGA_MODE=	-DSVGA_MODE=NORMAL_VGA
 # standard CFLAGS
 #
 
-CFLAGS = -Wall -Wstrict-prototypes -O2 -fomit-frame-pointer -pipe
+CFLAGS = -m32 -Wall -Wstrict-prototypes -O2 -fomit-frame-pointer -pipe -fno-stack-protector  -fno-builtin  -I$(PWD)/include/ -std=gnu89 -w
 
 ifdef CONFIG_CPP
 CFLAGS := $(CFLAGS) -x c++
 endif
 
 ifdef CONFIG_M486
-CFLAGS := $(CFLAGS) -m486
+#CFLAGS := $(CFLAGS) -m486
 else
-CFLAGS := $(CFLAGS) -m386
+#CFLAGS := $(CFLAGS) -m386
 endif
 
 #
@@ -69,18 +69,18 @@ endif
 
 #RAMDISK = -DRAMDISK=512
 
-AS86	=i686-linux-gnu-as -0 -a
-LD86	=i686-linux-gnu-ld -0
+AS86	=as86 -0 -a
+LD86	=ld86 -0
 
-AS	=i686-linux-gnu-as
-LD	=i686-linux-gnu-ld
+AS	=as --32
+LD	=ld -m elf_i386
 LDFLAGS	=#-qmagic
-HOSTCC	=gcc-4.8
-CC	=gcc-4.8 -D__KERNEL__
+HOSTCC	=gcc 
+CC	=gcc -D__KERNEL__  
 MAKE	=make
-CPP	=$(CC) -E
-AR	=i686-linux-gnu-ar
-STRIP	=i686-linux-gnu-strip
+CPP	=$(CC) -E -I$(PWD)/include/
+AR	=ar
+STRIP	=strip
 
 ARCHIVES	=kernel/kernel.o mm/mm.o fs/fs.o net/net.o ipc/ipc.o
 FILESYSTEMS	=fs/filesystems.a

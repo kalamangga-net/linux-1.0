@@ -6,7 +6,7 @@ SYSTEM = ../tools/zSystem
 
 zOBJECTS = $(HEAD) inflate.o unzip.o misc.o
 
-CFLAGS = -O2 -DSTDC_HEADERS $(TEST)
+CFLAGS = -O2 -DSTDC_HEADERS $(TEST) -I../include/ -w -m32
 
 .c.s:
 	$(CC) $(CFLAGS) -S -o $*.s $<
@@ -23,7 +23,7 @@ zSystem:	piggy.o $(zOBJECTS)
 head.o:	head.s
 
 head.s: head.S ../include/linux/tasks.h
-	$(CPP) -traditional head.S -o head.s
+	$(CPP) -w -traditional head.S -o head.s
 
 piggy.o:	$(SYSTEM) xtract piggyback
 		./xtract $(SYSTEM) | gzip -9 | ./piggyback > piggy.o

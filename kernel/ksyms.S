@@ -7,24 +7,24 @@
  *  Jon.
  */
 
-_register_chrdev
-_unregister_chrdev
-_register_blkdev
-_unregister_blkdev
-_wake_up_interruptible
+register_chrdev
+unregister_chrdev
+register_blkdev
+unregister_blkdev
+wake_up_interruptible
 
-_wp_works_ok
-___verify_write
+wp_works_ok
+__verify_write
 
-_current
-_jiffies
-_printk
-_schedule
+current
+jiffies
+printk
+schedule
 
 #ifdef CONFIG_FTAPE
 #
 # The next labels are needed for ftape driver.
 #
-_ftape_big_buffer
-_do_floppy
+ftape_big_buffer
+do_floppy
 #endif

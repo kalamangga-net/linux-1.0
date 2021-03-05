@@ -819,7 +819,7 @@ static inline unsigned long try_to_share_buffers(unsigned long address,
 #define COPYBLK(size,from,to) \
 __asm__ __volatile__("rep ; movsl": \
 	:"c" (((unsigned long) size) >> 2),"S" (from),"D" (to) \
-	:"cx","di","si")
+	:)
 
 /*
  * bread_page reads four buffers into memory at the desired address. It's

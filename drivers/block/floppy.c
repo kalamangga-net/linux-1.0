@@ -432,7 +432,7 @@ int floppy_change(struct buffer_head * bh)
 __asm__("cld ; rep ; movsl" \
 	: \
 	:"c" (BLOCK_SIZE/4),"S" ((long)(from)),"D" ((long)(to)) \
-	:"cx","di","si")
+	:)
 
 static void setup_DMA(void)
 {

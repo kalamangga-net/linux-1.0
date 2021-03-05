@@ -8,6 +8,7 @@
 #include <linux/kernel.h>
 #include <linux/errno.h>
 #include <linux/stat.h>
+#include <linux/string.h>
 
 
 static struct fat_cache *fat_cache,cache[FAT_CACHE];

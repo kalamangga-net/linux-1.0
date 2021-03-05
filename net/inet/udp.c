@@ -151,7 +151,7 @@ udp_check(struct udphdr *uh, int len,
 	  "\t adcl $0, %%ebx\n"
 	  : "=b"(sum)
 	  : "0"(daddr), "c"(saddr), "d"((ntohs(len) << 16) + IPPROTO_UDP*256)
-	  : "cx","bx","dx" );
+	  :  );
 
   if (len > 3) {
 	__asm__("\tclc\n"
@@ -162,7 +162,7 @@ udp_check(struct udphdr *uh, int len,
 		"\t adcl $0, %%ebx\n"
 		: "=b"(sum) , "=S"(uh)
 		: "0"(sum), "c"(len/4) ,"1"(uh)
-		: "ax", "cx", "bx", "si" );
+		: "ax" );
   }
 
   /* Convert from 32 bits to 16 bits. */
@@ -172,7 +172,7 @@ udp_check(struct udphdr *uh, int len,
 	  "\t adcw $0, %%bx\n"
 	  : "=b"(sum)
 	  : "0"(sum)
-	  : "bx", "cx");
+	  : "cx");
 
   /* Check for an extra word. */
   if ((len & 2) != 0) {
@@ -181,7 +181,7 @@ udp_check(struct udphdr *uh, int len,
 		"\t adcw $0, %%bx\n"
 		: "=b"(sum), "=S"(uh)
 		: "0"(sum) ,"1"(uh)
-		: "si", "ax", "bx");
+		: "ax");
   }
 
   /* Now check for the extra byte. */
@@ -192,7 +192,7 @@ udp_check(struct udphdr *uh, int len,
 		"\t adcw $0, %%bx\n"
 		: "=b"(sum)
 		: "0"(sum) ,"S"(uh)
-		: "si", "ax", "bx");
+		: "ax");
   }
 
   /* We only want the bottom 16 bits, but we never cleared the top 16. */

@@ -53,8 +53,9 @@ SWAP_DEV = 0
 ! ld86 requires an entry symbol. This may as well be the usual one.
 .globl	_main
 _main:
+
+
 #if 0 /* hook for debugger, harmless unless BIOS is fussy (old HP) */
-	int	3
 #endif
 	mov	ax,#BOOTSEG
 	mov	ds,ax
@@ -67,8 +68,8 @@ _main:
 	rep
 	movsw
 	jmpi	go,INITSEG
-
-go:	mov	ax,cs		
+go: ! now we shoud be in ip:0, cs:BOOTSEG
+	mov	ax,cs		
 	mov	dx,#0x4000-12	! 0x4000 is arbitrary value >= length of
 				! bootsect + length of setup + room for stack
 				! 12 is disk parm size
@@ -131,7 +132,7 @@ go:	mov	ax,cs
 	int 	0x13	
 
 ! load the setup-sectors directly after the bootblock.
-! Note that 'es' is already set up.
+! Note that 'es' is already set up
 
 load_setup:
 	xor	dx, dx			! drive 0, head 0
@@ -218,7 +219,6 @@ got_sectors:
 ! defined (!= 0), nothing is done and the given device is used.
 ! Otherwise, either /dev/PS0 (2,28) or /dev/at0 (2,8), depending
 ! on the number of sectors that the BIOS reports currently.
-
 	seg cs
 	mov	ax,root_dev
 	or	ax,ax
@@ -236,9 +236,35 @@ root_defined:
 	seg cs
 	mov	root_dev,ax
 
+#if 0
 ! after that (everyting loaded), we jump to
 ! the setup-routine loaded directly after
 ! the bootblock:
+mov ax, #SETUPSEG
+mov ds, ax
+
+mov cx, #5
+mov bx, #0
+
+mem_dump:
+seg ds
+mov di, (bx)
+add bx, #2
+mov ax, di
+push cx
+#TODO: finish print memory
+push    ax                      ! dump number
+mov     bp, sp                  ! dump number
+call    print_hex ! print that number
+pop     ax ! fix stack address
+call    print_nl
+pop cx
+loop mem_dump
+
+inf: jmp inf
+;	mov	ax, #0x4141	! CR
+;	int	0x10
+#endif
 
 	jmpi	0,SETUPSEG
 
