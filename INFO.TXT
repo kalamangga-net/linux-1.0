@@ -10,3 +10,10 @@ warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 $ make config
 
 $ make
+
+#text - machine code
+#bss - uninitialized data
+#data - initialized data
+#rodata - read only data
+
+#0x2f20 - decompress_kernel

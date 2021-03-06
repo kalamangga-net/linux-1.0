@@ -1,6 +1,8 @@
-.text
+.section piggy
 .global input_data, input_len
-input_data:
-.incbin "a.out.gz"
 input_len:
-.int input_len - input_data
+.int data_end - data_beg
+input_data:
+data_beg:
+.incbin "a.out.gz"
+data_end:

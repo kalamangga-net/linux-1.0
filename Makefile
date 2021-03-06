@@ -53,7 +53,7 @@ SVGA_MODE=	-DSVGA_MODE=NORMAL_VGA
 CFLAGS = -Wall -Wstrict-prototypes -O2  -fomit-frame-pointer -pipe \
          -w -m32 -I$(PWD)/include/ -std=gnu89 \
 	 -fno-stack-protector -fno-builtin -mmanual-endbr \
-	 -fno-reorder-blocks-and-partition
+	 -fno-reorder-blocks-and-partition -fno-pie
 #-Wno-attribute-alias
 
 ifdef CONFIG_CPP
@@ -190,7 +190,7 @@ zImage: $(CONFIGURE) boot/bootsect boot/setup zBoot/zSystem tools/build
 	dd if=boot/setup skip=32 bs=1 of=setup.bin
 	cat bootsect.bin setup.bin > zImage
 	cat zImage | dd of=zImage bs=2560 conv=sync
-	objcopy -O binary -j.text -j.data -j.rodata -j.bss zBoot/zSystem zSystem.bin
+	objcopy -O binary -j.text zBoot/zSystem zSystem.bin
 	cat zSystem.bin >> zImage
 	cat zImage | dd of=zImage bs=1M conv=sync
 	sync
@@ -206,7 +206,7 @@ zlilo: $(CONFIGURE) zImage
 	if [ -x /sbin/lilo ]; then /sbin/lilo; else /etc/lilo/install; fi
 
 tools/zSystem:	boot/head.o init/main.o tools/version.o linuxsubdirs
-	$(LD) $(LDFLAGS) -Ttext 100000 boot/head.o init/main.o tools/version.o \
+	$(LD) $(LDFLAGS) -T script.ld boot/head.o init/main.o tools/version.o \
 		$(ARCHIVES) \
 		$(FILESYSTEMS) \
 		$(DRIVERS) \

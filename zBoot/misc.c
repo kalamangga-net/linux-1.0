@@ -304,6 +304,7 @@ void error(char *x)
 
 long user_stack [STACK_SIZE];
 
+//__attribute__((section(".text")))
 struct {
 	long * a;
 	short b;
