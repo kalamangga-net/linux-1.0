@@ -28,32 +28,9 @@ os:
 	cat b.out >> os_pad.bin
 	#padd to 1.44M
 	dd if=os_pad.bin of=os_pad.img bs=1M conv=sync
-	
-        
-
-vdi_old:
-	rm -f os.vdi ;\
-	UUID=$$(VBoxManage  list vms | grep OSDev | grep -Eoi "\{(.*)\}" | tr -d '{}') ;\
-	echo UUID=$$UUID ;\
-	VBoxManage convertfromraw os_pad.bin os.vdi --format VDI --variant Fixed --uuid $$UUID ; \
-	VBoxManage showmediuminfo floppy $$UUID ; \
-	VBoxManage modifymedium --setlocation $$PWD/os.vdi $$UUID ; \
-	VBoxManage showmediuminfo floppy $$UUID
-
-vdi_old2:
-	rm -f os.vdi ;\
-	UUID=$$(VBoxManage  list vms | grep OSDev | grep -Eoi "\{(.*)\}" | tr -d '{}') ;\
-	echo UUID=$$UUID ;\
-	VBoxManage showmediuminfo floppy $$UUID ; \
-	VBoxManage modifymedium --setlocation $$PWD/os_pad.img $$UUID ; \
-	VBoxManage showmediuminfo floppy $$UUID
-
-vdi:
-	echo "OK"
 
 run:
-	VBoxManage startvm OSDev
-
+	bochs -f bochsrc -q
 
 clean:
 	rm -f a.out

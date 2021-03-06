@@ -193,7 +193,6 @@ zImage: $(CONFIGURE) boot/bootsect boot/setup zBoot/zSystem tools/build
 	objcopy -O binary -j.text -j.data -j.rodata -j.bss zBoot/zSystem zSystem.bin
 	cat zSystem.bin >> zImage
 	cat zImage | dd of=zImage bs=1M conv=sync
-	ln -s zImage zImage.img
 	sync
 
 zdisk: zImage
