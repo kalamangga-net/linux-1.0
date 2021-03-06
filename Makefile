@@ -35,7 +35,7 @@ endif
 # the default of FLOPPY is used by 'build'.
 #
 
-ROOT_DEV = CURRENT
+ROOT_DEV = OTHER
 
 #
 # If you want to preset the SVGA mode, uncomment the next line and
@@ -185,7 +185,15 @@ zBoot/zSystem: zBoot/*.c zBoot/*.S tools/zSystem
 	$(MAKE) -C zBoot
 
 zImage: $(CONFIGURE) boot/bootsect boot/setup zBoot/zSystem tools/build
-	tools/build boot/bootsect boot/setup zBoot/zSystem $(ROOT_DEV) > zImage
+	#tools/build boot/bootsect boot/setup zBoot/zSystem $(ROOT_DEV) > zImage
+	dd if=boot/bootsect skip=32 bs=1 of=bootsect.bin
+	dd if=boot/setup skip=32 bs=1 of=setup.bin
+	cat bootsect.bin setup.bin > zImage
+	cat zImage | dd of=zImage bs=2560 conv=sync
+	objcopy -O binary -j.text -j.data -j.rodata -j.bss zBoot/zSystem zSystem.bin
+	cat zSystem.bin >> zImage
+	cat zImage | dd of=zImage bs=1M conv=sync
+	ln -s zImage zImage.img
 	sync
 
 zdisk: zImage
@@ -239,6 +247,10 @@ clean:
 	rm -f .tmp* drivers/sound/configure
 	rm -f init/*.o tools/build boot/*.o tools/*.o
 	rm -f zBoot/a.out.gz
+	rm -f zSystem.bin
+	rm -f zImage.img
+	rm -f setup.bin
+	rm -f bootsect.bin
 
 mrproper: clean
 	rm -f include/linux/autoconf.h tools/version.h
