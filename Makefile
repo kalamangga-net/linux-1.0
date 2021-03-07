@@ -153,6 +153,7 @@ tools/version.o: tools/version.c tools/version.h
 init/main.o: $(CONFIGURE) init/main.c
 	$(CC) $(CFLAGS) $(PROFILING) -c -o $*.o $<
 
+#non-compressed kernel
 tools/system:	boot/head.o init/main.o tools/version.o linuxsubdirs
 	$(LD) $(LDFLAGS) -Ttext 1000 boot/head.o init/main.o tools/version.o \
 		$(ARCHIVES) \
@@ -189,10 +190,14 @@ zImage: $(CONFIGURE) boot/bootsect boot/setup zBoot/zSystem tools/build
 	dd if=boot/bootsect skip=32 bs=1 of=bootsect.bin
 	dd if=boot/setup skip=32 bs=1 of=setup.bin
 	cat bootsect.bin setup.bin > zImage
-	cat zImage | dd of=zImage bs=2560 conv=sync
+	sync
+	truncate -s 2560 zImage
+	sync
 	objcopy -O binary -j.text zBoot/zSystem zSystem.bin
+	sync
 	cat zSystem.bin >> zImage
-	cat zImage | dd of=zImage bs=1M conv=sync
+	sync
+	#truncate -s 1509949 zImage
 	sync
 
 zdisk: zImage
@@ -205,6 +210,7 @@ zlilo: $(CONFIGURE) zImage
 	cp zSystem.map /
 	if [ -x /sbin/lilo ]; then /sbin/lilo; else /etc/lilo/install; fi
 
+#compressed kernel
 tools/zSystem:	boot/head.o init/main.o tools/version.o linuxsubdirs
 	$(LD) $(LDFLAGS) -T script.ld boot/head.o init/main.o tools/version.o \
 		$(ARCHIVES) \

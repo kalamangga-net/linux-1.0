@@ -1,8 +1,7 @@
 .section piggy
 .global input_data, input_len
 input_len:
-.int data_end - data_beg
+.long (input_data_end - input_data)
 input_data:
-data_beg:
 .incbin "a.out.gz"
-data_end:
+input_data_end:
