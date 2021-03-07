@@ -252,6 +252,7 @@ clean:
 	rm -f .tmp* drivers/sound/configure
 	rm -f init/*.o tools/build boot/*.o tools/*.o
 	rm -f zBoot/a.out.gz
+	rm -f zBoot/a.out
 	rm -f zSystem.bin
 	rm -f zImage.img
 	rm -f setup.bin
