@@ -31,8 +31,7 @@ head.s: head.S ../include/linux/tasks.h
 
 piggy.o:	$(SYSTEM) xtract piggyback
 		objcopy -O binary -j.text $(SYSTEM) a.out
-		rm -f a.out.gz
-		gzip -9 a.out
+		cat a.out | gzip -9 > a.out.gz
 		$(CC) -c piggyback2.S -m32 -o piggy.o
 
 
