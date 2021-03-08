@@ -16,11 +16,11 @@ bool 'Use -m486 flag for 486-specific optimizations' CONFIG_M486 n
 * Program binary formats
 *
 bool 'Elf executables' CONFIG_BINFMT_ELF y
-bool 'COFF executables' CONFIG_BINFMT_COFF y
+bool 'COFF executables' CONFIG_BINFMT_COFF n
 *
 * SCSI support
 *
-bool 'SCSI support?' CONFIG_SCSI n
+bool 'SCSI support?' CONFIG_SCSI y
 if [ "$CONFIG_SCSI" = "n" ]
 :
 : Skipping SCSI configuration options...
@@ -30,7 +30,7 @@ else
 	* SCSI support type (disk, tape, CDrom)
 	*
 bool 'Scsi disk support' CONFIG_BLK_DEV_SD y
-bool 'Scsi tape support' CONFIG_CHR_DEV_ST y
+bool 'Scsi tape support' CONFIG_CHR_DEV_ST n
 bool 'Scsi CDROM support' CONFIG_BLK_DEV_SR y
 bool 'Scsi generic support' CONFIG_CHR_DEV_SG y
 	*
@@ -63,7 +63,7 @@ if [ "$CONFIG_SLIP" = "y" ]
 fi
 #bool 'PPP (point-to-point) support' CONFIG_PPP n
 bool 'PLIP (parallel port) support' CONFIG_PLIP n
-bool 'NE2000/NE1000 support' CONFIG_NE2000 n
+bool 'NE2000/NE1000 support' CONFIG_NE2000 y
 bool 'WD80*3 support' CONFIG_WD80x3 n
 bool 'SMC Ultra support' CONFIG_ULTRA n
 bool '3c501 support' CONFIG_EL1 n
