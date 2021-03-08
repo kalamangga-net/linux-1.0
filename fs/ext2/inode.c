@@ -26,9 +26,11 @@
 #include <linux/locks.h>
 
 #define clear_block(addr,size) \
-	__asm__("cld\n\t" \
+	__asm__("push %%ecx ; push %%edi ;" \
+                "cld\n\t" \
 		"rep\n\t" \
 		"stosl" \
+                "; pop %%edi ; pop %%ecx" \
 		: \
 		:"a" (0), "c" (size / 4), "D" ((long) (addr)) \
 		:)

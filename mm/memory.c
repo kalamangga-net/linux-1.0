@@ -61,7 +61,10 @@ int nr_secondary_pages = 0;
 unsigned long secondary_page_list = 0;
 
 #define copy_page(from,to) \
-__asm__("cld ; rep ; movsl": :"S" (from),"D" (to),"c" (1024):)
+__asm__("push %%ecx; push %%edi; push %%esi ;" \
+        "cld ; rep ; movsl" \
+        "; pop %%esi; pop %%edi; pop %%ecx" \
+        : :"S" (from),"D" (to),"c" (1024):)
 
 unsigned short * mem_map = NULL;
 
@@ -940,7 +943,9 @@ unsigned long __bad_pagetable(void)
 {
 	extern char empty_bad_page_table[PAGE_SIZE];
 
-	__asm__ __volatile__("cld ; rep ; stosl":
+	__asm__ __volatile__("push %%edi; push %%ecx ;"
+                "cld ; rep ; stosl"
+                "; pop %%ecx; pop %%edi":
 		:"a" (BAD_PAGE + PAGE_TABLE),
 		 "D" ((long) empty_bad_page_table),
 		 "c" (PTRS_PER_PAGE)
@@ -952,7 +957,9 @@ unsigned long __bad_page(void)
 {
 	extern char empty_bad_page[PAGE_SIZE];
 
-	__asm__ __volatile__("cld ; rep ; stosl":
+	__asm__ __volatile__("push %%edi; push %%ecx ;"
+                "cld ; rep ; stosl"
+                "; pop %%ecx; pop %%edi":
 		:"a" (0),
 		 "D" ((long) empty_bad_page),
 		 "c" (PTRS_PER_PAGE)
@@ -964,7 +971,9 @@ unsigned long __zero_page(void)
 {
 	extern char empty_zero_page[PAGE_SIZE];
 
-	__asm__ __volatile__("cld ; rep ; stosl":
+	__asm__ __volatile__("push %%edi; push %%ecx ;"
+                "cld ; rep ; stosl"
+                "; pop %%ecx; pop %%edi":
 		:"a" (0),
 		 "D" ((long) empty_zero_page),
 		 "c" (PTRS_PER_PAGE)

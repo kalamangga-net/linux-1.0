@@ -39,7 +39,7 @@ static inline int find_first_zero_bit (unsigned long * addr, unsigned size)
 
 	if (!size)
 		return 0;
-	__asm__(
+	__asm__("push %%ebx ; push %%ecx; push %%edi ;"
 		"cld\t\n"
 		"movl $-1,%%eax\t\n"
 		"repe; scasl\t\n"
@@ -53,6 +53,7 @@ static inline int find_first_zero_bit (unsigned long * addr, unsigned size)
 		"2:\tsubl %%ebx,%%edi\t\n"
 		"shll $3,%%edi\t\n"
 		"addl %%edi,%%edx"
+                "; pop %%edi ; pop %%ecx ; pop %%ebx"
 		: "=d" (res)
 		: "c" ((size + 31) >> 5), "D" (addr), "b" (addr)
 		: "ax");

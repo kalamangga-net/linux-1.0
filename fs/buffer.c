@@ -817,7 +817,9 @@ static inline unsigned long try_to_share_buffers(unsigned long address,
 }
 
 #define COPYBLK(size,from,to) \
-__asm__ __volatile__("rep ; movsl": \
+__asm__ __volatile__("push %%ecx ; push %%edi ; push %%esi ; " \
+        "rep ; movsl" \
+        "; pop %%esi ; pop %%edi ; pop %%ecx ": \
 	:"c" (((unsigned long) size) >> 2),"S" (from),"D" (to) \
 	:)
 

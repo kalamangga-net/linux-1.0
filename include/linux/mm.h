@@ -114,7 +114,9 @@ extern inline unsigned long get_free_page(int priority)
 
 	page = __get_free_page(priority);
 	if (page)
-		__asm__ __volatile__("rep ; stosl"
+		__asm__ __volatile__("push %%edi ; push %%ecx ;" 
+                        "rep ; stosl"
+                        "; pop %%ecx ; pop %%edi"
 			: /* no outputs */ \
 			:"a" (0),"c" (1024),"D" (page)
 			:);//stosl uses eax, es:edi, ecx - all listed in asm constraints

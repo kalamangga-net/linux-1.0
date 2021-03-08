@@ -531,20 +531,24 @@ tcp_check(struct tcphdr *th, int len,
    
   if (saddr == 0) saddr = my_addr();
   print_th(th);
-  __asm__("\t addl %%ecx,%%ebx\n"
+  __asm__("push %%ecx; push %%edx; "
+          "\t addl %%ecx,%%ebx\n"
 	  "\t adcl %%edx,%%ebx\n"
 	  "\t adcl $0, %%ebx\n"
+          "; pop %%edx; pop %%ecx"
 	  : "=b"(sum)
 	  : "0"(daddr), "c"(saddr), "d"((ntohs(len) << 16) + IPPROTO_TCP*256)
 	  : );
    
   if (len > 3) {
-	__asm__("\tclc\n"
+	__asm__("push %%ecx; "
+                "\tclc\n"
 		"1:\n"
 		"\t lodsl\n"
 		"\t adcl %%eax, %%ebx\n"
 		"\t loop 1b\n"
 		"\t adcl $0, %%ebx\n"
+                "; pop %%ecx"
 		: "=b"(sum) , "=S"(th)
 		: "0"(sum), "c"(len/4) ,"1"(th)
 		: "ax" );
@@ -571,10 +575,12 @@ tcp_check(struct tcphdr *th, int len,
    
   /* Now check for the extra byte. */
   if ((len & 1) != 0) {
-	__asm__("\t lodsb\n"
+	__asm__("push %%esi ; "
+                "\t lodsb\n"
 		"\t movb $0,%%ah\n"
 		"\t addw %%ax,%%bx\n"
 		"\t adcw $0, %%bx\n"
+                "; pop %%esi"
 		: "=b"(sum)
 		: "0"(sum) ,"S"(th)
 		: "ax");
