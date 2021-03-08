@@ -35,7 +35,7 @@ endif
 # the default of FLOPPY is used by 'build'.
 #
 
-ROOT_DEV = OTHER
+ROOT_DEV = -DROOT_DEV=0x0000 # default
 
 #
 # If you want to preset the SVGA mode, uncomment the next line and
@@ -180,7 +180,7 @@ boot/bootsect.o: boot/bootsect.s
 	$(AS86) -o $@ $<
 
 boot/bootsect.s: boot/bootsect.S $(CONFIGURE) include/linux/config.h Makefile
-	$(CPP) -traditional $(SVGA_MODE) $(RAMDISK) $< -o $@
+	$(CPP) -traditional $(SVGA_MODE) $(RAMDISK) $(ROOT_DEV) $< -o $@
 
 zBoot/zSystem: zBoot/*.c zBoot/*.S tools/zSystem
 	$(MAKE) -C zBoot

@@ -38,7 +38,7 @@ SETUPSEG  = DEF_SETUPSEG		! setup starts here
 SYSSEG    = DEF_SYSSEG			! system loaded at 0x10000 (65536).
 
 ! ROOT_DEV & SWAP_DEV are now written by "build".
-ROOT_DEV = 0
+!ROOT_DEV = 0
 SWAP_DEV = 0
 #ifndef SVGA_MODE
 #define SVGA_MODE ASK_VGA
