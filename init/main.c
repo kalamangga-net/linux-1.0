@@ -235,6 +235,7 @@ static void calibrate_delay(void)
 		ticks = jiffies;
 		__delay(loops_per_sec);
 		ticks = jiffies - ticks;
+		ticks *= 100;//TODO: check this constant value!
 		if (ticks >= HZ) {
 			__asm__("mull %1 ; divl %2"
 				:"=a" (loops_per_sec)
