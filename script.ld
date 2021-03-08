@@ -10,7 +10,7 @@ SECTIONS
   {
     *(.text)
     etext = .;
-    *(.rodata)
+    *(.rodata*)
     *(.data)
     _edata = .;
     *(.bss)
