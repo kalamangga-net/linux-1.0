@@ -28,7 +28,7 @@ startup_32:
 	mov %ax,%es
 	mov %ax,%fs
 	mov %ax,%gs
-	lss _stack_start,%esp
+	lss stack_start,%esp
 	xorl %eax,%eax
 1:	incl %eax		# check that A20 really IS enabled
 	movl %eax,0x000000	# loop forever if it isn't
@@ -45,8 +45,8 @@ startup_32:
  * Clear BSS
  */
 	xorl %eax,%eax
-	movl $__edata,%edi
-	movl $__end,%ecx
+	movl $_edata,%edi
+	movl $_end,%ecx
 	subl %edi,%ecx
 	cld
 	rep
@@ -54,5 +54,5 @@ startup_32:
 /*
  * Do the decompression, and jump to the new kernel..
  */
-	call _decompress_kernel
+	call decompress_kernel
 	ljmp $(KERNEL_CS), $0x100000

@@ -15,12 +15,12 @@ trap "rm -f ksyms.tmp ksyms.lst ; exit 1" 1 2
 sed -e '/^#/d' -e '/^[	 ]*$/d' ksyms.lst | sort > ksyms.tmp
 
 echo '	.data
-	.globl	_symbol_table_size, _symbol_table
+	.globl	symbol_table_size, symbol_table
 
-_symbol_table_size:'
+symbol_table_size:'
 echo "	.long" `wc -l < ksyms.tmp`
 echo '
-_symbol_table:'
+symbol_table:'
 awk 'BEGIN {stringloc = 0}
 {print "	.long " $1; print "	.long strings+" stringloc; \
         stringloc += length($1) + 1;}' ksyms.tmp

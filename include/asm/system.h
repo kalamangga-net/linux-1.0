@@ -61,7 +61,7 @@ __asm__ __volatile__ ("movw %%dx,%%ax\n\t" \
 	 "=m" (*(1+(long *) (gate_addr))) \
 	:"i" ((short) (0x8000+(dpl<<13)+(type<<8))), \
 	 "d" ((char *) (addr)),"a" (KERNEL_CS << 16) \
-	:"ax","dx")
+	:)
 
 #define set_intr_gate(n,addr) \
 	_set_gate(&idt[n],14,0,addr)

@@ -236,35 +236,9 @@ root_defined:
 	seg cs
 	mov	root_dev,ax
 
-#if 0
 ! after that (everyting loaded), we jump to
 ! the setup-routine loaded directly after
 ! the bootblock:
-mov ax, #SETUPSEG
-mov ds, ax
-
-mov cx, #5
-mov bx, #0
-
-mem_dump:
-seg ds
-mov di, (bx)
-add bx, #2
-mov ax, di
-push cx
-#TODO: finish print memory
-push    ax                      ! dump number
-mov     bp, sp                  ! dump number
-call    print_hex ! print that number
-pop     ax ! fix stack address
-call    print_nl
-pop cx
-loop mem_dump
-
-inf: jmp inf
-;	mov	ax, #0x4141	! CR
-;	int	0x10
-#endif
 
 	jmpi	0,SETUPSEG
 

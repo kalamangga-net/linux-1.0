@@ -31,7 +31,7 @@
 		"stosl" \
 		: \
 		:"a" (0), "c" (size / 4), "D" ((long) (addr)) \
-		:"cx", "di")
+		:)
 
 void ext2_put_inode (struct inode * inode)
 {

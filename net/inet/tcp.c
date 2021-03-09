@@ -536,7 +536,7 @@ tcp_check(struct tcphdr *th, int len,
 	  "\t adcl $0, %%ebx\n"
 	  : "=b"(sum)
 	  : "0"(daddr), "c"(saddr), "d"((ntohs(len) << 16) + IPPROTO_TCP*256)
-	  : "cx","bx","dx" );
+	  : );
    
   if (len > 3) {
 	__asm__("\tclc\n"
@@ -547,7 +547,7 @@ tcp_check(struct tcphdr *th, int len,
 		"\t adcl $0, %%ebx\n"
 		: "=b"(sum) , "=S"(th)
 		: "0"(sum), "c"(len/4) ,"1"(th)
-		: "ax", "cx", "bx", "si" );
+		: "ax" );
   }
    
   /* Convert from 32 bits to 16 bits. */
@@ -557,7 +557,7 @@ tcp_check(struct tcphdr *th, int len,
 	  "\t adcw $0, %%bx\n"
 	  : "=b"(sum)
 	  : "0"(sum)
-	  : "bx", "cx");
+	  : "cx");
    
   /* Check for an extra word. */
   if ((len & 2) != 0) {
@@ -566,7 +566,7 @@ tcp_check(struct tcphdr *th, int len,
 		"\t adcw $0, %%bx\n"
 		: "=b"(sum), "=S"(th)
 		: "0"(sum) ,"1"(th)
-		: "si", "ax", "bx");
+		: "ax");
   }
    
   /* Now check for the extra byte. */
@@ -577,7 +577,7 @@ tcp_check(struct tcphdr *th, int len,
 		"\t adcw $0, %%bx\n"
 		: "=b"(sum)
 		: "0"(sum) ,"S"(th)
-		: "si", "ax", "bx");
+		: "ax");
   }
    
   /* We only want the bottom 16 bits, but we never cleared the top 16. */

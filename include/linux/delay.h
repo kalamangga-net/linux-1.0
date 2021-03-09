@@ -11,7 +11,7 @@ extern unsigned long loops_per_sec;
 
 extern __inline__ void __delay(int loops)
 {
-	__asm__(".align 2,0x90\n1:\tdecl %0\n\tjns 1b": :"a" (loops):"ax");
+	__asm__(".align 2,0x90\n1:\tdecl %0\n\tjns 1b": :"a" (loops):);
 }
 
 /*
@@ -30,7 +30,7 @@ extern __inline__ void udelay(unsigned long usecs)
 	__asm__("mull %0"
 		:"=d" (usecs)
 		:"a" (usecs),"0" (loops_per_sec)
-		:"ax");
+		:);
 	__delay(usecs);
 }
 

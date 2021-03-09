@@ -35,7 +35,7 @@ endif
 # the default of FLOPPY is used by 'build'.
 #
 
-ROOT_DEV = CURRENT
+ROOT_DEV = OTHER
 
 #
 # If you want to preset the SVGA mode, uncomment the next line and
@@ -50,16 +50,20 @@ SVGA_MODE=	-DSVGA_MODE=NORMAL_VGA
 # standard CFLAGS
 #
 
-CFLAGS = -Wall -Wstrict-prototypes -O2 -fomit-frame-pointer -pipe
+CFLAGS = -Wall -Wstrict-prototypes -O2  -fomit-frame-pointer -pipe \
+         -w -m32 -I$(PWD)/include/ -std=gnu89 \
+	 -fno-stack-protector -fno-builtin -mmanual-endbr \
+	 -fno-reorder-blocks-and-partition
+#-Wno-attribute-alias
 
 ifdef CONFIG_CPP
 CFLAGS := $(CFLAGS) -x c++
 endif
 
 ifdef CONFIG_M486
-CFLAGS := $(CFLAGS) -m486
+#CFLAGS := $(CFLAGS) -m486
 else
-CFLAGS := $(CFLAGS) -m386
+#CFLAGS := $(CFLAGS) -m386
 endif
 
 #
@@ -69,18 +73,18 @@ endif
 
 #RAMDISK = -DRAMDISK=512
 
-AS86	=i686-linux-gnu-as -0 -a
-LD86	=i686-linux-gnu-ld -0
+AS86	=as86 -0 -a
+LD86	=ld86 -0
 
-AS	=i686-linux-gnu-as
-LD	=i686-linux-gnu-ld
+AS	=as --32
+LD	=ld -m elf_i386
 LDFLAGS	=#-qmagic
-HOSTCC	=gcc-4.8
-CC	=gcc-4.8 -D__KERNEL__
+HOSTCC	=gcc 
+CC	=gcc -D__KERNEL__  
 MAKE	=make
-CPP	=$(CC) -E
-AR	=i686-linux-gnu-ar
-STRIP	=i686-linux-gnu-strip
+CPP	=$(CC) -E -I$(PWD)/include/
+AR	=ar
+STRIP	=strip
 
 ARCHIVES	=kernel/kernel.o mm/mm.o fs/fs.o net/net.o ipc/ipc.o
 FILESYSTEMS	=fs/filesystems.a
@@ -181,7 +185,15 @@ zBoot/zSystem: zBoot/*.c zBoot/*.S tools/zSystem
 	$(MAKE) -C zBoot
 
 zImage: $(CONFIGURE) boot/bootsect boot/setup zBoot/zSystem tools/build
-	tools/build boot/bootsect boot/setup zBoot/zSystem $(ROOT_DEV) > zImage
+	#tools/build boot/bootsect boot/setup zBoot/zSystem $(ROOT_DEV) > zImage
+	dd if=boot/bootsect skip=32 bs=1 of=bootsect.bin
+	dd if=boot/setup skip=32 bs=1 of=setup.bin
+	cat bootsect.bin setup.bin > zImage
+	cat zImage | dd of=zImage bs=2560 conv=sync
+	objcopy -O binary -j.text -j.data -j.rodata -j.bss zBoot/zSystem zSystem.bin
+	cat zSystem.bin >> zImage
+	cat zImage | dd of=zImage bs=1M conv=sync
+	ln -s zImage zImage.img
 	sync
 
 zdisk: zImage
@@ -234,6 +246,11 @@ clean:
 	rm -f zBoot/zSystem zBoot/xtract zBoot/piggyback
 	rm -f .tmp* drivers/sound/configure
 	rm -f init/*.o tools/build boot/*.o tools/*.o
+	rm -f zBoot/a.out.gz
+	rm -f zSystem.bin
+	rm -f zImage.img
+	rm -f setup.bin
+	rm -f bootsect.bin
 
 mrproper: clean
 	rm -f include/linux/autoconf.h tools/version.h

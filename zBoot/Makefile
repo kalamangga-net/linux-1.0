@@ -6,7 +6,11 @@ SYSTEM = ../tools/zSystem
 
 zOBJECTS = $(HEAD) inflate.o unzip.o misc.o
 
-CFLAGS = -O2 -DSTDC_HEADERS $(TEST)
+CFLAGS = -O2 -DSTDC_HEADERS $(TEST) -I../include/ \
+         -w -m32 -std=gnu89 \
+         -fno-stack-protector -fno-builtin -mmanual-endbr \
+         -fno-reorder-blocks-and-partition
+
 
 .c.s:
 	$(CC) $(CFLAGS) -S -o $*.s $<
@@ -23,10 +27,14 @@ zSystem:	piggy.o $(zOBJECTS)
 head.o:	head.s
 
 head.s: head.S ../include/linux/tasks.h
-	$(CPP) -traditional head.S -o head.s
+	$(CPP) -w -traditional head.S -o head.s
 
 piggy.o:	$(SYSTEM) xtract piggyback
-		./xtract $(SYSTEM) | gzip -9 | ./piggyback > piggy.o
+		objcopy -O binary -j.text -j.data -j.rodata -j.bss $(SYSTEM) a.out
+		rm -f a.out.gz
+		gzip -9 a.out
+		$(CC) -c piggyback2.S -m32 -o piggy.o
+
 
 $(SYSTEM):
 		$(MAKE) -C .. tools/zSystem

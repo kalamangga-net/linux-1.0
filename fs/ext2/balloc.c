@@ -38,7 +38,7 @@
 		"stosl" \
 		: \
 		:"a" (0), "c" (size / 4), "D" ((long) (addr)) \
-		:"cx", "di")
+		:)
 
 #define in_range(b, first, len)		((b) >= (first) && (b) <= (first) + (len) - 1)
 
@@ -48,23 +48,23 @@ static inline int find_first_zero_bit (unsigned long * addr, unsigned size)
 
 	if (!size)
 		return 0;
-	__asm__("
-		cld
-		movl $-1,%%eax
-		repe; scasl
-		je 1f
-		subl $4,%%edi
-		movl (%%edi),%%eax
-		notl %%eax
-		bsfl %%eax,%%edx
-		jmp 2f
-1:		xorl %%edx,%%edx
-2:		subl %%ebx,%%edi
-		shll $3,%%edi
-		addl %%edi,%%edx"
+	__asm__(
+		"cld\t\n"
+		"movl $-1,%%eax\t\n"
+		"repe; scasl\t\n"
+		"je 1f\t\n"
+		"subl $4,%%edi\t\n"
+		"movl (%%edi),%%eax\t\n"
+		"notl %%eax\t\n"
+		"bsfl %%eax,%%edx\t\n"
+		"jmp 2f\t\n"
+		"1:\txorl %%edx,%%edx\t\n"
+		"2:\tsubl %%ebx,%%edi\t\n"
+		"shll $3,%%edi\t\n"
+		"addl %%edi,%%edx"
 		:"=d" (res)
 		:"c" ((size + 31) >> 5), "D" (addr), "b" (addr)
-		:"ax", "bx", "cx", "di");
+		:"ax");
 	return res;
 }
 
@@ -78,11 +78,11 @@ static inline int find_next_zero_bit (unsigned long * addr, int size,
 		/*
 		 * Look for zero in first byte
 		 */
-		__asm__("
-			bsfl %1,%0
-			jne 1f
-			movl $32, %0
-1:			"
+		__asm__(
+			"bsfl %1,%0\t\n"
+			"jne 1f\t\n"
+			"movl $32, %0\t\n"
+			"1:"
 			: "=r" (set)
 			: "r" (~(*p >> bit)));
 		if (set < (32 - bit))
@@ -103,13 +103,13 @@ static inline char * find_first_zero_byte (char * addr, int size)
 
 	if (!size)
 		return 0;
-	__asm__("
-		cld
-		mov $0,%%eax
-		repnz; scasb
-		jnz 1f
-		dec %%edi
-1:		"
+	__asm__(
+		"cld\t\n"
+		"mov $0,%%eax\t\n"
+		"repnz; scasb\t\n"
+		"jnz 1f\t\n"
+		"dec %%edi\t\n"
+		"1:"
 		: "=D" (res)
 		: "0" (addr), "c" (size)
 		: "ax");
