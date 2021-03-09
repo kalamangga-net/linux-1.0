@@ -76,7 +76,6 @@ long rd_init(long mem_start, int length)
 {
 	int	i;
 	char	*cp;
-
 	if (register_blkdev(MEM_MAJOR,"rd",&rd_fops)) {
 		printk("RAMDISK: Unable to get major %d.\n", MEM_MAJOR);
 		return 0;
@@ -85,8 +84,8 @@ long rd_init(long mem_start, int length)
 	rd_start = (char *) mem_start;
 	rd_length = length;
 	cp = rd_start;
-	for (i=0; i < length; i++)
-		*cp++ = '\0';
+	/*for (i=0; i < length; i++)
+		*cp++ = '\0';*/
 
 	for(i=0;i<2;i++) rd_blocksizes[i] = 1024;
 	blksize_size[MAJOR_NR] = rd_blocksizes;
@@ -108,7 +107,6 @@ void rd_load(void)
 	int		nblocks;
 	char		*cp;
 
-	/* If no RAM disk specified, give up early. */
 	if (!rd_length) return;
 	printk("RAMDISK: %d bytes, starting at 0x%x\n",
 					rd_length, (int) rd_start);
