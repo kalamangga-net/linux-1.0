@@ -71,7 +71,7 @@ endif
 # size in blocks.
 #
 
-#RAMDISK = -DRAMDISK=512
+RAMDISK = -DRAMDISK=512
 
 AS86	=as86 -0 -a
 LD86	=ld86 -0
@@ -197,7 +197,7 @@ zImage: $(CONFIGURE) boot/bootsect boot/setup zBoot/zSystem tools/build
 	sync
 	cat zSystem.bin >> zImage
 	sync
-	#truncate -s 1509949 zImage
+	truncate -s 1474560 zImage
 	sync
 
 zdisk: zImage
