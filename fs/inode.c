@@ -35,8 +35,10 @@ static void insert_inode_free(struct inode *inode)
 {
 	inode->i_next = first_inode;
 	inode->i_prev = first_inode->i_prev;
-	inode->i_next->i_prev = inode;
-	inode->i_prev->i_next = inode;
+        if(inode->i_next)
+		inode->i_next->i_prev = inode;
+	if(inode->i_prev)
+		inode->i_prev->i_next = inode;
 	first_inode = inode;
 }
 
@@ -81,9 +83,11 @@ static void put_last_free(struct inode *inode)
 {
 	remove_inode_free(inode);
 	inode->i_prev = first_inode->i_prev;
-	inode->i_prev->i_next = inode;
+	if(inode->i_prev)
+		inode->i_prev->i_next = inode;
 	inode->i_next = first_inode;
-	inode->i_next->i_prev = inode;
+	if(inode->i_next)
+		inode->i_next->i_prev = inode;
 }
 
 void grow_inodes(void)
@@ -116,7 +120,7 @@ static void __wait_on_inode(struct inode *);
 
 static inline void wait_on_inode(struct inode * inode)
 {
-	if (inode->i_lock)
+	if (inode && inode->i_lock)
 		__wait_on_inode(inode);
 }
 
@@ -291,7 +295,7 @@ void sync_inodes(dev_t dev)
 	struct inode * inode;
 
 	inode = first_inode;
-	for(i = 0; i < nr_inodes*2; i++, inode = inode->i_next) {
+	for(i = 0; i < nr_inodes*2 && inode; i++, inode = inode->i_next) {
 		if (dev && inode->i_dev != dev)
 			continue;
 		wait_on_inode(inode);
@@ -472,7 +476,8 @@ found_it:
 		tmp->i_count++;
 		iput(inode);
 		inode = tmp;
-		wait_on_inode(inode);
+		if(inode)
+			wait_on_inode(inode);
 	}
 	if (empty)
 		iput(empty);
