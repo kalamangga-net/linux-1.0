@@ -1,4 +1,4 @@
-
+### needed package to compile kernel
 $ sudo apt install bin86
 
 $ gcc --version
@@ -7,13 +7,54 @@ Copyright (C) 2019 Free Software Foundation, Inc.
 This is free software; see the source for copying conditions.  There is NO
 warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
+### compile kernel
 $ make config
 
 $ make
 
+### sections info
 #text - machine code
 #bss - uninitialized data
 #data - initialized data
 #rodata - read only data
 
-#0x2f20 - decompress_kernel
+
+
+### how to create simplest ext2 floppy root deb for that kernel
+$touch myfs
+$truncate -s 1474560 myfs
+$mkfs.ext2 -b 1024 myfs
+$mkdir myfsdir
+$sudo mount myfs myfsdir/
+$sudo mkdir myfsdir/bin/
+$sudo mkdir myfsdir/dev/
+$mkdir tmp
+$cat > tmp/init.c << EOF
+#include <linux/unistd.h>
+#include <linux/types.h>
+int errno;
+static inline _syscall3(int,write,int,fd,const char *,buf,off_t,count)
+int _start(void){
+  write(1, "Hello World!", 12);  
+  for(;;);
+}
+EOF
+$gcc tmp/init.c -o tmp/init.o -static -c \
+	-Wall -Wstrict-prototypes -O2  -fomit-frame-pointer -pipe \
+        -w -m32 -I./include/ -std=gnu89 \
+        -fno-stack-protector -fno-builtin -mmanual-endbr \
+        -fno-reorder-blocks-and-partition -fno-pie
+$ld -m elf_i386 tmp/init.o -o tmp/init
+$sudo mv tmp/init myfsdir/bin/
+$rm -rf tmp
+$sudo mknod myfsdir/dev/tty1 c 4 1
+$sudo umount myfsdir/
+
+
+###boot kernel with root floppy using bochs
+$bochs -f bochsrc -q
+###### when kernel puts message: VFS: Insert root floppy and press ENTER
+###### click CONFIG in bochs then choose 1,ENTER, type myfs, ENTER, ENTER, ENTER, ENTER, choose 9, ENTER
+###### continue booting by press any key
+###### Hello World! from our simplified "bash" should come up
+
