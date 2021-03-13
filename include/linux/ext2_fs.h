@@ -308,7 +308,8 @@ struct ext2_super_block {
 struct ext2_dir_entry {
 	unsigned long  inode;			/* Inode number */
 	unsigned short rec_len;			/* Directory entry length */
-	unsigned short name_len;		/* Name length */
+	unsigned char  name_len;		/* Name length */
+	unsigned char  file_type;		/* File type */
 	char           name[EXT2_NAME_LEN];	/* File name */
 };
 
