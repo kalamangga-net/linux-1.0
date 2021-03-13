@@ -19,7 +19,7 @@
  *		Copyright (C) 1991, 1992 Linus Torvalds
  */
  
-static inline char * strcpy(char * dest,const char *src)
+extern inline char * strcpy(char * dest,const char *src)
 {
 __asm__("push %%esi ; push %%edi ;"
         "cld\n"
@@ -33,7 +33,7 @@ __asm__("push %%esi ; push %%edi ;"
 return dest;
 }
 
-static inline char * strncpy(char * dest,const char *src,size_t count)
+extern inline char * strncpy(char * dest,const char *src,size_t count)
 {
 __asm__("push %%esi ; push %%edi ; push %%ecx ;"
         "cld\n"
@@ -52,7 +52,7 @@ __asm__("push %%esi ; push %%edi ; push %%ecx ;"
 return dest;
 }
 
-static inline char * strcat(char * dest,const char * src)
+extern inline char * strcat(char * dest,const char * src)
 {
 __asm__("push %%esi ; push %%edi ; push %%eax ; push %%ecx ;"
         "cld\n\t"
@@ -69,7 +69,7 @@ __asm__("push %%esi ; push %%edi ; push %%eax ; push %%ecx ;"
 return dest;
 }
 
-static inline char * strncat(char * dest,const char * src,size_t count)
+extern inline char * strncat(char * dest,const char * src,size_t count)
 {
 __asm__("push %%esi ; push %%edi ; push %%eax ; push %%ecx ;"
         "cld\n\t"
@@ -92,7 +92,7 @@ __asm__("push %%esi ; push %%edi ; push %%eax ; push %%ecx ;"
 return dest;
 }
 
-static inline int strcmp(const char * cs,const char * ct)
+extern inline int strcmp(const char * cs,const char * ct)
 {
 register int __res __asm__("ax");
 __asm__("push %%esi ; push %%edi ;"
@@ -113,7 +113,7 @@ __asm__("push %%esi ; push %%edi ;"
 return __res;
 }
 
-static inline int strncmp(const char * cs,const char * ct,size_t count)
+extern inline int strncmp(const char * cs,const char * ct,size_t count)
 {
 register int __res __asm__("ax");
 __asm__("push %%esi ; push %%edi ; push %%ecx ;"
@@ -136,7 +136,7 @@ __asm__("push %%esi ; push %%edi ; push %%ecx ;"
 return __res;
 }
 
-static inline char * strchr(const char * s,char c)
+extern inline char * strchr(const char * s,char c)
 {
 register char * __res __asm__("ax");
 __asm__("push %%esi ;"
@@ -155,7 +155,7 @@ __asm__("push %%esi ;"
 return __res;
 }
 
-static inline char * strrchr(const char * s,char c)
+extern inline char * strrchr(const char * s,char c)
 {
 register char * __res __asm__("dx");
 __asm__("push %%esi ;"
@@ -173,7 +173,7 @@ __asm__("push %%esi ;"
 return __res;
 }
 
-static inline size_t strspn(const char * cs, const char * ct)
+extern inline size_t strspn(const char * cs, const char * ct)
 {
 register char * __res __asm__("si");
 __asm__("push %%ecx ; "
@@ -199,7 +199,7 @@ __asm__("push %%ecx ; "
 return __res-cs;
 }
 
-static inline size_t strcspn(const char * cs, const char * ct)
+extern inline size_t strcspn(const char * cs, const char * ct)
 {
 register char * __res __asm__("si");
 __asm__("push %%ecx ;"
@@ -225,7 +225,7 @@ __asm__("push %%ecx ;"
 return __res-cs;
 }
 
-static inline char * strpbrk(const char * cs,const char * ct)
+extern inline char * strpbrk(const char * cs,const char * ct)
 {
 register char * __res __asm__("si");
 __asm__("push %%ecx ;"
@@ -254,7 +254,7 @@ __asm__("push %%ecx ;"
 return __res;
 }
 
-static inline char * strstr(const char * cs,const char * ct)
+extern inline char * strstr(const char * cs,const char * ct)
 {
 register char * __res __asm__("ax");
 __asm__("push %%ecx ; push %%esi ;"
@@ -283,7 +283,7 @@ __asm__("push %%ecx ; push %%esi ;"
 return __res;
 }
 
-static inline size_t strlen(const char * s)
+extern inline size_t strlen(const char * s)
 {
 register int __res __asm__("cx");
 __asm__("push %%edi;\n\t"
@@ -297,9 +297,9 @@ __asm__("push %%edi;\n\t"
 return __res;
 }
 
-static char * ___strtok;
+extern char * ___strtok;
 
-static inline char * strtok(char * s,const char * ct)
+extern inline char * strtok(char * s,const char * ct)
 {
 register char * __res;
 __asm__("testl %1,%1\n\t"
@@ -358,7 +358,7 @@ __asm__("testl %1,%1\n\t"
 return __res;
 }
 
-static inline void * memcpy(void * to, const void * from, size_t n)
+extern inline void * memcpy(void * to, const void * from, size_t n)
 {
 __asm__("push %%edi ; push %%esi ;"
         "cld\n\t"
@@ -379,7 +379,7 @@ __asm__("push %%edi ; push %%esi ;"
 return (to);
 }
 
-static inline void * memmove(void * dest,const void * src, size_t n)
+extern inline void * memmove(void * dest,const void * src, size_t n)
 {
 if (dest<src)
 __asm__("push %%ecx ; push %%esi; push %%edi ;"
@@ -405,7 +405,7 @@ __asm__("push %%ecx ; push %%esi; push %%edi ;"
 return dest;
 }
 
-static inline int memcmp(const void * cs,const void * ct,size_t count)
+extern inline int memcmp(const void * cs,const void * ct,size_t count)
 {
 register int __res __asm__("ax");
 __asm__("push %%esi; push %%edi; push %%ecx ;"
@@ -423,7 +423,7 @@ __asm__("push %%esi; push %%edi; push %%ecx ;"
 return __res;
 }
 
-static inline void * memchr(const void * cs,char c,size_t count)
+extern inline void * memchr(const void * cs,char c,size_t count)
 {
 register void * __res __asm__("di");
 if (!count)
@@ -441,7 +441,7 @@ __asm__("push %%ecx;"
 return __res;
 }
 
-static inline void * memset(void * s,char c,size_t count)
+extern inline void * memset(void * s,char c,size_t count)
 {
 __asm__("push %%ecx; push %%edi ; "
         "cld\n\t"
