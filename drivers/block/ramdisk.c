@@ -84,8 +84,8 @@ long rd_init(long mem_start, int length)
 	rd_start = (char *) mem_start;
 	rd_length = length;
 	cp = rd_start;
-	/*for (i=0; i < length; i++)
-		*cp++ = '\0';*/
+	for (i=0; i < length; i++)
+		*cp++ = '\0';
 
 	for(i=0;i<2;i++) rd_blocksizes[i] = 1024;
 	blksize_size[MAJOR_NR] = rd_blocksizes;

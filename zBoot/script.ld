@@ -1,10 +1,7 @@
 SECTIONS
 {
 
-  dummy :
-  {
-    . = 0x1000;
-  }
+  . = 0x1000;
 
   .text :
   {
@@ -13,7 +10,7 @@ SECTIONS
     *(.rodata*)
     *(.data)
     _edata = .;
-    *(.bss)
+    *(.bss COMMON)
     _end = .;
     end = .;
     *(piggy)
