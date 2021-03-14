@@ -21,19 +21,22 @@
  
 extern inline char * strcpy(char * dest,const char *src)
 {
-__asm__("cld\n"
+__asm__("push %%esi ; push %%edi ;"
+        "cld\n"
 	"1:\tlodsb\n\t"
 	"stosb\n\t"
 	"testb %%al,%%al\n\t"
 	"jne 1b"
+        "; pop %%edi ; pop %%esi"
 	: /* no output */
-	:"S" (src),"D" (dest):"si","di","ax","memory");
+	:"S" (src),"D" (dest):"ax","memory");
 return dest;
 }
 
 extern inline char * strncpy(char * dest,const char *src,size_t count)
 {
-__asm__("cld\n"
+__asm__("push %%esi ; push %%edi ; push %%ecx ;"
+        "cld\n"
 	"1:\tdecl %2\n\t"
 	"js 2f\n\t"
 	"lodsb\n\t"
@@ -43,14 +46,16 @@ __asm__("cld\n"
 	"rep\n\t"
 	"stosb\n"
 	"2:"
+        " ; pop %%ecx ; pop %%edi ; pop %%esi"
 	: /* no output */
-	:"S" (src),"D" (dest),"c" (count):"si","di","ax","cx","memory");
+	:"S" (src),"D" (dest),"c" (count):"ax","memory");
 return dest;
 }
 
 extern inline char * strcat(char * dest,const char * src)
 {
-__asm__("cld\n\t"
+__asm__("push %%esi ; push %%edi ; push %%eax ; push %%ecx ;"
+        "cld\n\t"
 	"repne\n\t"
 	"scasb\n\t"
 	"decl %1\n"
@@ -58,14 +63,16 @@ __asm__("cld\n\t"
 	"stosb\n\t"
 	"testb %%al,%%al\n\t"
 	"jne 1b"
+        "; pop %%ecx; pop %%eax; pop %%edi ; pop %%esi"
 	: /* no output */
-	:"S" (src),"D" (dest),"a" (0),"c" (0xffffffff):"si","di","ax","cx");
+	:"S" (src),"D" (dest),"a" (0),"c" (0xffffffff):);
 return dest;
 }
 
 extern inline char * strncat(char * dest,const char * src,size_t count)
 {
-__asm__("cld\n\t"
+__asm__("push %%esi ; push %%edi ; push %%eax ; push %%ecx ;"
+        "cld\n\t"
 	"repne\n\t"
 	"scasb\n\t"
 	"decl %1\n\t"
@@ -78,16 +85,18 @@ __asm__("cld\n\t"
 	"jne 1b\n"
 	"2:\txorl %2,%2\n\t"
 	"stosb"
+        "; pop %%ecx; pop %%eax; pop %%edi ; pop %%esi"
 	: /* no output */
 	:"S" (src),"D" (dest),"a" (0),"c" (0xffffffff),"g" (count)
-	:"si","di","ax","cx","memory");
+	:"memory");
 return dest;
 }
 
 extern inline int strcmp(const char * cs,const char * ct)
 {
 register int __res __asm__("ax");
-__asm__("cld\n"
+__asm__("push %%esi ; push %%edi ;"
+        "cld\n"
 	"1:\tlodsb\n\t"
 	"scasb\n\t"
 	"jne 2f\n\t"
@@ -99,14 +108,16 @@ __asm__("cld\n"
 	"jb 3f\n\t"
 	"negl %%eax\n"
 	"3:"
-	:"=a" (__res):"D" (cs),"S" (ct):"si","di");
+        "; pop %%edi ; pop %%esi"
+	:"=a" (__res):"D" (cs),"S" (ct):);
 return __res;
 }
 
 extern inline int strncmp(const char * cs,const char * ct,size_t count)
 {
 register int __res __asm__("ax");
-__asm__("cld\n"
+__asm__("push %%esi ; push %%edi ; push %%ecx ;"
+        "cld\n"
 	"1:\tdecl %3\n\t"
 	"js 2f\n\t"
 	"lodsb\n\t"
@@ -120,14 +131,16 @@ __asm__("cld\n"
 	"jb 4f\n\t"
 	"negl %%eax\n"
 	"4:"
-	:"=a" (__res):"D" (cs),"S" (ct),"c" (count):"si","di","cx");
+        "; pop %%ecx ; pop %%edi ; pop %%esi "
+	:"=a" (__res):"D" (cs),"S" (ct),"c" (count):);
 return __res;
 }
 
 extern inline char * strchr(const char * s,char c)
 {
 register char * __res __asm__("ax");
-__asm__("cld\n\t"
+__asm__("push %%esi ;"
+        "cld\n\t"
 	"movb %%al,%%ah\n"
 	"1:\tlodsb\n\t"
 	"cmpb %%ah,%%al\n\t"
@@ -137,14 +150,16 @@ __asm__("cld\n\t"
 	"movl $1,%1\n"
 	"2:\tmovl %1,%0\n\t"
 	"decl %0"
-	:"=a" (__res):"S" (s),"0" (c):"si");
+        "; pop %%esi"
+	:"=a" (__res):"S" (s),"0" (c):);
 return __res;
 }
 
 extern inline char * strrchr(const char * s,char c)
 {
 register char * __res __asm__("dx");
-__asm__("cld\n\t"
+__asm__("push %%esi ;"
+        "cld\n\t"
 	"movb %%al,%%ah\n"
 	"1:\tlodsb\n\t"
 	"cmpb %%ah,%%al\n\t"
@@ -153,14 +168,16 @@ __asm__("cld\n\t"
 	"decl %0\n"
 	"2:\ttestb %%al,%%al\n\t"
 	"jne 1b"
-	:"=d" (__res):"0" (0),"S" (s),"a" (c):"ax","si");
+        "; pop %%esi"
+	:"=d" (__res):"0" (0),"S" (s),"a" (c):);
 return __res;
 }
 
 extern inline size_t strspn(const char * cs, const char * ct)
 {
 register char * __res __asm__("si");
-__asm__("cld\n\t"
+__asm__("push %%ecx ; "
+        "cld\n\t"
 	"movl %4,%%edi\n\t"
 	"repne\n\t"
 	"scasb\n\t"
@@ -176,15 +193,17 @@ __asm__("cld\n\t"
 	"scasb\n\t"
 	"je 1b\n"
 	"2:\tdecl %0"
+        "; pop %%ecx"
 	:"=S" (__res):"a" (0),"c" (0xffffffff),"0" (cs),"g" (ct)
-	:"ax","cx","dx","di");
+	:"dx","di");
 return __res-cs;
 }
 
 extern inline size_t strcspn(const char * cs, const char * ct)
 {
 register char * __res __asm__("si");
-__asm__("cld\n\t"
+__asm__("push %%ecx ;"
+        "cld\n\t"
 	"movl %4,%%edi\n\t"
 	"repne\n\t"
 	"scasb\n\t"
@@ -200,15 +219,17 @@ __asm__("cld\n\t"
 	"scasb\n\t"
 	"jne 1b\n"
 	"2:\tdecl %0"
+        "; pop %%ecx"
 	:"=S" (__res):"a" (0),"c" (0xffffffff),"0" (cs),"g" (ct)
-	:"ax","cx","dx","di");
+	:"dx","di");
 return __res-cs;
 }
 
 extern inline char * strpbrk(const char * cs,const char * ct)
 {
 register char * __res __asm__("si");
-__asm__("cld\n\t"
+__asm__("push %%ecx ;"
+        "cld\n\t"
 	"movl %4,%%edi\n\t"
 	"repne\n\t"
 	"scasb\n\t"
@@ -227,15 +248,17 @@ __asm__("cld\n\t"
 	"jmp 3f\n"
 	"2:\txorl %0,%0\n"
 	"3:"
+        "; pop %%ecx"
 	:"=S" (__res):"a" (0),"c" (0xffffffff),"0" (cs),"g" (ct)
-	:"ax","cx","dx","di");
+	:"dx","di");
 return __res;
 }
 
 extern inline char * strstr(const char * cs,const char * ct)
 {
 register char * __res __asm__("ax");
-__asm__("cld\n\t" \
+__asm__("push %%ecx ; push %%esi ;"
+        "cld\n\t" \
 	"movl %4,%%edi\n\t"
 	"repne\n\t"
 	"scasb\n\t"
@@ -254,20 +277,23 @@ __asm__("cld\n\t" \
 	"jne 1b\n\t"
 	"xorl %%eax,%%eax\n\t"
 	"2:"
+        "; pop %%esi; pop %%ecx"
 	:"=a" (__res):"0" (0),"c" (0xffffffff),"S" (cs),"g" (ct)
-	:"cx","dx","di","si");
+	:"dx","di");
 return __res;
 }
 
 extern inline size_t strlen(const char * s)
 {
 register int __res __asm__("cx");
-__asm__("cld\n\t"
+__asm__("push %%edi;\n\t"
+        "cld\n\t"
 	"repne\n\t"
 	"scasb\n\t"
 	"notl %0\n\t"
-	"decl %0"
-	:"=c" (__res):"D" (s),"a" (0),"0" (0xffffffff):"di");
+	"decl %0\n\t"
+        "; pop %%edi"
+	:"=c" (__res):"D" (s),"a" (0),"0" (0xffffffff):);
 return __res;
 }
 
@@ -334,7 +360,8 @@ return __res;
 
 extern inline void * memcpy(void * to, const void * from, size_t n)
 {
-__asm__("cld\n\t"
+__asm__("push %%edi ; push %%esi ;"
+        "cld\n\t"
 	"movl %%edx, %%ecx\n\t"
 	"shrl $2,%%ecx\n\t"
 	"rep ; movsl\n\t"
@@ -345,38 +372,44 @@ __asm__("cld\n\t"
 	"je 2f\n\t"
 	"movsw\n"
 	"2:\n"
+        "; pop %%esi; pop %%edi"
 	: /* no output */
 	:"d" (n),"D" ((long) to),"S" ((long) from)
-	: "cx","di","si","memory");
+	: "cx","memory");
 return (to);
 }
 
 extern inline void * memmove(void * dest,const void * src, size_t n)
 {
 if (dest<src)
-__asm__("cld\n\t"
+__asm__("push %%ecx ; push %%esi; push %%edi ;"
+        "cld\n\t"
 	"rep\n\t"
 	"movsb"
+        "; pop %%edi; pop %%esi; pop %%ecx"
 	: /* no output */
 	:"c" (n),"S" (src),"D" (dest)
-	:"cx","si","di");
+	:);
 else
-__asm__("std\n\t"
+__asm__("push %%ecx ; push %%esi; push %%edi ;"
+        "std\n\t"
 	"rep\n\t"
 	"movsb\n\t"
 	"cld"
+        "; pop %%edi; pop %%esi; pop %%ecx"
 	: /* no output */
 	:"c" (n),
 	 "S" (n-1+(const char *)src),
 	 "D" (n-1+(char *)dest)
-	:"cx","si","di","memory");
+	:"memory");
 return dest;
 }
 
 extern inline int memcmp(const void * cs,const void * ct,size_t count)
 {
 register int __res __asm__("ax");
-__asm__("cld\n\t"
+__asm__("push %%esi; push %%edi; push %%ecx ;"
+        "cld\n\t"
 	"repe\n\t"
 	"cmpsb\n\t"
 	"je 1f\n\t"
@@ -384,8 +417,9 @@ __asm__("cld\n\t"
 	"jb 1f\n\t"
 	"negl %%eax\n"
 	"1:"
+        "; pop %%ecx; pop %%edi; pop %%esi"
 	:"=a" (__res):"0" (0),"D" (cs),"S" (ct),"c" (count)
-	:"si","di","cx");
+	:);
 return __res;
 }
 
@@ -394,25 +428,29 @@ extern inline void * memchr(const void * cs,char c,size_t count)
 register void * __res __asm__("di");
 if (!count)
 	return NULL;
-__asm__("cld\n\t"
+__asm__("push %%ecx;"
+        "cld\n\t"
 	"repne\n\t"
 	"scasb\n\t"
 	"je 1f\n\t"
 	"movl $1,%0\n"
 	"1:\tdecl %0"
+        "; pop %%ecx"
 	:"=D" (__res):"a" (c),"D" (cs),"c" (count)
-	:"cx");
+	:);
 return __res;
 }
 
 extern inline void * memset(void * s,char c,size_t count)
 {
-__asm__("cld\n\t"
+__asm__("push %%ecx; push %%edi ; "
+        "cld\n\t"
 	"rep\n\t"
 	"stosb"
+        "; pop %%edi ; pop %%ecx"
 	: /* no output */
 	:"a" (c),"D" (s),"c" (count)
-	:"cx","di","memory");
+	:"memory");
 return s;
 }
 

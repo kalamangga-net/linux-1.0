@@ -519,7 +519,7 @@ int seagate_st0x_queue_command (Scsi_Cmnd * SCpnt,  void (*done)(Scsi_Cmnd *))
 	done_fn = done;
 	current_target = SCpnt->target;
 	current_lun = SCpnt->lun;
-	(const void *) current_cmnd = SCpnt->cmnd;
+	current_cmnd = SCpnt->cmnd;
 	current_data = (unsigned char *) SCpnt->request_buffer;
 	current_bufflen = SCpnt->request_bufflen;
 	SCint = SCpnt;
@@ -1051,24 +1051,24 @@ if (fast && transfersize && !(len % transfersize) && (len >= transfersize)
                SCint->transfersize, len, data);
 #endif
 
-        __asm__("
-	cld;
-"
+        __asm__("push %%ecx ; push %%esi \t\n"
+	"cld;\n\t"
+
 #ifdef FAST32
-"	shr $2, %%ecx;
-1:	lodsl;
-	movl %%eax, (%%edi);
-"
+	"shr $2, %%ecx;\n\t"
+	"1:\tlodsl;\n\t"
+	"movl %%eax, (%%edi);\n\t"
+
 #else
-"1:	lodsb;
-        movb %%al, (%%edi);
-"
+	"1:\tlodsb;\n\t"
+        "movb %%al, (%%edi);\n\t"
+
 #endif
-"	loop 1b;" : :
+	"loop 1b;\t\n" "pop %%esi ; pop %%ecx" : :
         /* input */
         "D" (st0x_dr), "S" (data), "c" (SCint->transfersize) :
         /* clobbered */
-        "eax", "ecx", "esi" );
+        "eax" );
 
 	len -= transfersize;
 	data += transfersize;
@@ -1098,38 +1098,38 @@ if (fast && transfersize && !(len % transfersize) && (len >= transfersize)
 
 	Test for any data here at all.
 */
-	"\torl %%ecx, %%ecx
-	jz 2f
+	"\torl %%ecx, %%ecx\t\n"
+	"jz 2f\t\n"
 
-	cld
+	"cld\t\n"
 
-	movl _st0x_cr_sr, %%ebx
-	movl _st0x_dr, %%edi
+	"movl st0x_cr_sr, %%ebx\t\n"
+	"movl st0x_dr, %%edi\t\n"
 	
-1:	movb (%%ebx), %%al\n"
+	"1:\tmovb (%%ebx), %%al\t\n"
 /*
 	Test for BSY
 */
 
-	"\ttest $1, %%al
-	jz 2f\n"
+	"\ttest $1, %%al\t\n"
+	"jz 2f\t\n"
 
 /*
 	Test for data out phase - STATUS & REQ_MASK should be REQ_DATAOUT, which is 0.
 */
-	"\ttest $0xe, %%al
-	jnz 2f	\n"
+	"\ttest $0xe, %%al\t\n"
+	"jnz 2f\t\n"
 /*
 	Test for REQ
 */	
-	"\ttest $0x10, %%al
-	jz 1b
-	lodsb
-	movb %%al, (%%edi) 
-	loop 1b
+	"\ttest $0x10, %%al\t\n"
+	"jz 1b\t\n"
+	"lodsb\t\n"
+	"movb %%al, (%%edi)\t\n"
+	"loop 1b\t\n"
 
-2: 
-									":
+	"2:\t\n" 
+	:
 /* output */
 "=S" (data), "=c" (len) :
 /* input */
@@ -1177,25 +1177,25 @@ if (fast && transfersize && !(len % transfersize) && (len >= transfersize)
                "         len = %d, data = %08x\n", hostno, SCint->underflow, 
                SCint->transfersize, len, data);
 #endif
-        __asm__("
-	cld;
-"
+        __asm__("push %%ecx; push %%edi\t\n"
+	"cld;"
+
 #ifdef FAST32
-"	shr $2, %%ecx;
-1:	movl (%%esi), %%eax;
-	stosl;
-"
+	"shr $2, %%ecx;\t\n"
+	"1:movl (%%esi), %%eax;\t\n"
+	"stosl;\t\n"
+
 #else
-"1:	movb (%%esi), %%al;
-        stosb;
-"
+	"1:\tmovb (%%esi), %%al;\t\n"
+        "stosb;\t\n"
+
 #endif
 
-"	loop 1b;" : :
+	"loop 1b;\t\n" "pop %%edi; pop %%ecx" : :
         /* input */
         "S" (st0x_dr), "D" (data), "c" (SCint->transfersize) :
         /* clobbered */
-        "eax", "ecx", "edi");
+        "eax");
 
 	len -= transfersize;
 	data += transfersize;
@@ -1235,40 +1235,40 @@ if (fast && transfersize && !(len % transfersize) && (len >= transfersize)
 
 	Test for room to read
 */
-	"\torl %%ecx, %%ecx
-	jz 2f
+	"\torl %%ecx, %%ecx\t\n"
+	"jz 2f\t\n"
 
-	cld
-	movl _st0x_cr_sr, %%esi
-	movl _st0x_dr, %%ebx
+	"cld\t\n"
+	"movl st0x_cr_sr, %%esi\t\n"
+	"movl st0x_dr, %%ebx\t\n"
 
-1:	movb (%%esi), %%al\n"
+	"1:movb (%%esi), %%al\t\n"
 /*
 	Test for BSY
 */
 
-	"\ttest $1, %%al 
-	jz 2f\n"
+	"\ttest $1, %%al\t\n"
+	"jz 2f\t\n"
 
 /*
 	Test for data in phase - STATUS & REQ_MASK should be REQ_DATAIN, = STAT_IO, which is 4.
 */
-	"\tmovb $0xe, %%ah	
-	andb %%al, %%ah
-	cmpb $0x04, %%ah
-	jne 2f\n"
+	"\tmovb $0xe, %%ah\t\n"
+	"andb %%al, %%ah\t\n"
+	"cmpb $0x04, %%ah\t\n"
+	"jne 2f\t\n"
 		
 /*
 	Test for REQ
 */	
-	"\ttest $0x10, %%al
-	jz 1b
+	"\ttest $0x10, %%al\t\n"
+	"jz 1b\t\n"
 
-	movb (%%ebx), %%al	
-	stosb	
-	loop 1b\n"
+	"movb (%%ebx), %%al\t\n"
+	"stosb\t\n"
+	"loop 1b\t\n"
 
-"2:\n"
+	"2:\t\n"
 									:
 /* output */
 "=D" (data), "=c" (len) :

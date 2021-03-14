@@ -26,12 +26,14 @@
 #include <linux/locks.h>
 
 #define clear_block(addr,size,value) \
-	__asm__("cld\n\t" \
+	__asm__("push %%ecx ; push %%edi ;" \
+                "cld\n\t" \
 		"rep\n\t" \
 		"stosl" \
+                "; pop %%edi ; pop %%ecx" \
 		: \
 		:"a" (value), "c" (size / 4), "D" ((long) (addr)) \
-		:"cx", "di")
+		:)
 
 static int ext2_secrm_seed = 152;	/* Random generator base */
 

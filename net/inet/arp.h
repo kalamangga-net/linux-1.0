@@ -45,7 +45,7 @@ struct arp_table {
 
 
 /* This is also used in "sock.c" and "tcp.c" - YUCK! - FvK */
-extern struct sk_buff *arp_q;
+extern struct sk_buff * volatile arp_q;
 
 
 extern void	arp_destroy(unsigned long paddr);

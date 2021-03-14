@@ -105,7 +105,7 @@ repeat:
 	for (i = nr_buffers*2 ; i-- > 0 ; bh = bh->b_next_free) {
 		if (dev && bh->b_dev != dev)
 			continue;
-#ifdef 0 /* Disable bad-block debugging code */
+#if 0 /* Disable bad-block debugging code */
 		if (bh->b_req && !bh->b_lock &&
 		    !bh->b_dirt && !bh->b_uptodate)
 			printk ("Warning (IO error) - orphaned block %08x on %04x\n",
@@ -817,9 +817,11 @@ static inline unsigned long try_to_share_buffers(unsigned long address,
 }
 
 #define COPYBLK(size,from,to) \
-__asm__ __volatile__("rep ; movsl": \
+__asm__ __volatile__("push %%ecx ; push %%edi ; push %%esi ; " \
+        "rep ; movsl" \
+        "; pop %%esi ; pop %%edi ; pop %%ecx ": \
 	:"c" (((unsigned long) size) >> 2),"S" (from),"D" (to) \
-	:"cx","di","si")
+	:)
 
 /*
  * bread_page reads four buffers into memory at the desired address. It's

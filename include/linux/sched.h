@@ -307,7 +307,7 @@ extern struct task_struct *current;
 extern unsigned long volatile jiffies;
 extern unsigned long itimer_ticks;
 extern unsigned long itimer_next;
-extern struct timeval xtime;
+extern volatile struct timeval xtime;
 extern int need_resched;
 
 #define CURRENT_TIME (xtime.tv_sec)
@@ -357,20 +357,22 @@ __asm__("str %%ax\n\t" \
  * tha math co-processor latest.
  */
 #define switch_to(tsk) \
-__asm__("cmpl %%ecx,_current\n\t" \
+__asm__("push %%ecx ;" \
+        "cmpl %%ecx,current\n\t" \
 	"je 1f\n\t" \
 	"cli\n\t" \
-	"xchgl %%ecx,_current\n\t" \
+	"xchgl %%ecx,current\n\t" \
 	"ljmp %0\n\t" \
 	"sti\n\t" \
-	"cmpl %%ecx,_last_task_used_math\n\t" \
+	"cmpl %%ecx,last_task_used_math\n\t" \
 	"jne 1f\n\t" \
 	"clts\n" \
 	"1:" \
+        "; pop %%ecx" \
 	: /* no output */ \
 	:"m" (*(((char *)&tsk->tss.tr)-4)), \
 	 "c" (tsk) \
-	:"cx")
+	:)
 
 #define _set_base(addr,base) \
 __asm__("movw %%dx,%0\n\t" \

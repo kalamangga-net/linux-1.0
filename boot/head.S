@@ -9,12 +9,12 @@
  */
 
 .text
-.globl _idt,_gdt,
-.globl _swapper_pg_dir,_pg0
-.globl _empty_bad_page
-.globl _empty_bad_page_table
-.globl _empty_zero_page
-.globl _tmp_floppy_area,_floppy_track_buffer
+.globl idt,gdt,
+.globl swapper_pg_dir,pg0
+.globl empty_bad_page
+.globl empty_bad_page_table
+.globl empty_zero_page
+.globl tmp_floppy_area,floppy_track_buffer
 
 #include <linux/tasks.h>
 #include <linux/segment.h>
@@ -35,13 +35,13 @@ startup_32:
 	mov %ax,%es
 	mov %ax,%fs
 	mov %ax,%gs
-	lss _stack_start,%esp
+	lss stack_start,%esp
 /*
  * Clear BSS first so that there are no surprises...
  */
 	xorl %eax,%eax
-	movl $__edata,%edi
-	movl $__end,%ecx
+	movl $_edata,%edi
+	movl $_end,%ecx
 	subl %edi,%ecx
 	cld
 	rep
@@ -50,7 +50,7 @@ startup_32:
  * start system 32-bit setup. We need to re-do some of the things done
  * in 16-bit mode for the "real" operations.
  */
-	call setup_idt
+	call setupidt
 	xorl %eax,%eax
 1:	incl %eax		# check that A20 really IS enabled
 	movl %eax,0x000000	# loop forever if it isn't
@@ -65,11 +65,11 @@ startup_32:
 	popfl
 /*
  * Copy bootup parameters out of the way. First 2kB of
- * _empty_zero_page is for boot parameters, second 2kB
+ * empty_zero_page is for boot parameters, second 2kB
  * is for the command line.
  */
 	movl $0x90000,%esi
-	movl $_empty_zero_page,%edi
+	movl $empty_zero_page,%edi
 	movl $512,%ecx
 	cld
 	rep
@@ -80,7 +80,7 @@ startup_32:
 	stosl
 	cmpw $(CL_MAGIC),CL_MAGIC_ADDR
 	jne 1f
-	movl $_empty_zero_page+2048,%edi
+	movl $empty_zero_page+2048,%edi
 	movzwl CL_OFFSET,%esi
 	addl $(CL_BASE_ADDR),%esi
 	movl $2048,%ecx
@@ -95,7 +95,7 @@ startup_32:
  */
 	movl %esp,%edi		# save stack pointer
 	andl $0xfffffffc,%esp	# align stack to avoid AC fault
-	movl $3,_x86
+	movl $3,x86
 	pushfl			# push EFLAGS
 	popl %eax		# get EFLAGS
 	movl %eax,%ecx		# save original EFLAGS
@@ -107,7 +107,7 @@ startup_32:
 	xorl %ecx,%eax		# change in flags
 	andl $0x40000,%eax	# check if AC bit changed
 	je is386
-	movl $4,_x86
+	movl $4,x86
 	movl %ecx,%eax
 	xorl $0x200000,%eax	# check ID flag
 	pushl %eax
@@ -123,7 +123,7 @@ isnew:	pushl %ecx		# restore original EFLAGS
 	.byte 0x0f, 0xa2	# check the processor type
 	andl $0xf00, %eax	# Set _x86 with the family
 	shrl $8, %eax		# returned.	
-	movl %eax, _x86
+	movl %eax, x86
 	movl %edi,%esp		# restore esp
 	movl %cr0,%eax		# 486+
 	andl $0x80000011,%eax	# Save PG,PE,ET
@@ -153,14 +153,14 @@ is386:	pushl %ecx		# restore original EFLAGS
 	mov %ax,%es
 	mov %ax,%fs
 	mov %ax,%gs
-	lss _stack_start,%esp
+	lss stack_start,%esp
 	xorl %eax,%eax
 	lldt %ax
 	pushl %eax		# These are the parameters to main :-)
 	pushl %eax
 	pushl %eax
 	cld			# gcc2 wants the direction flag cleared at all times
-	call _start_kernel
+	call start_kernel
 L6:
 	jmp L6			# main should never return here, but
 				# just in case, we know what happens.
@@ -169,7 +169,7 @@ L6:
  * We depend on ET to be correct. This checks for 287/387.
  */
 check_x87:
-	movl $0,_hard_math
+	movl $0,hard_math
 	clts
 	fninit
 	fstsw %ax
@@ -180,12 +180,12 @@ check_x87:
 	movl %eax,%cr0
 	ret
 .align 2
-1:	movl $1,_hard_math
+1:	movl $1,hard_math
 	.byte 0xDB,0xE4		/* fsetpm for 287, ignored by 387 */
 	ret
 
 /*
- *  setup_idt
+ *  setupidt
  *
  *  sets up a idt with 256 entries pointing to
  *  ignore_int, interrupt gates. It doesn't actually load
@@ -194,13 +194,13 @@ check_x87:
  *  are enabled elsewhere, when we can be relatively
  *  sure everything is ok.
  */
-setup_idt:
+setupidt:
 	lea ignore_int,%edx
 	movl $(KERNEL_CS << 16),%eax
 	movw %dx,%ax		/* selector = 0x0010 = cs */
 	movw $0x8E00,%dx	/* interrupt gate - dpl=0, present */
 
-	lea _idt,%edi
+	lea idt,%edi
 	mov $256,%ecx
 rp_sidt:
 	movl %eax,(%edi)
@@ -226,20 +226,20 @@ rp_sidt:
 setup_paging:
 	movl $1024*2,%ecx		/* 2 pages - swapper_pg_dir+1 page table */
 	xorl %eax,%eax
-	movl $_swapper_pg_dir,%edi	/* swapper_pg_dir is at 0x1000 */
+	movl $swapper_pg_dir,%edi	/* swapper_pg_dir is at 0x1000 */
 	cld;rep;stosl
 /* Identity-map the kernel in low 4MB memory for ease of transition */
-	movl $_pg0+7,_swapper_pg_dir		/* set present bit/user r/w */
+	movl $pg0+7,swapper_pg_dir		/* set present bit/user r/w */
 /* But the real place is at 0xC0000000 */
-	movl $_pg0+7,_swapper_pg_dir+3072	/* set present bit/user r/w */
-	movl $_pg0+4092,%edi
+	movl $pg0+7,swapper_pg_dir+3072	/* set present bit/user r/w */
+	movl $pg0+4092,%edi
 	movl $0x03ff007,%eax		/*  4Mb - 4096 + 7 (r/w user,p) */
 	std
 1:	stosl			/* fill the page backwards - more efficient :-) */
 	subl $0x1000,%eax
 	jge 1b
 	cld
-	movl $_swapper_pg_dir,%eax
+	movl $swapper_pg_dir,%eax
 	movl %eax,%cr3			/* cr3 - page directory start */
 	movl %cr0,%eax
 	orl $0x80000000,%eax
@@ -257,22 +257,22 @@ setup_paging:
  * by 2-3k.  This would be a good thing to do at some point.....
  */
 .org 0x1000
-_swapper_pg_dir:
+swapper_pg_dir:
 /*
  * The page tables are initialized to only 4MB here - the final page
  * tables are set up later depending on memory size.
  */
 .org 0x2000
-_pg0:
+pg0:
 
 .org 0x3000
-_empty_bad_page:
+empty_bad_page:
 
 .org 0x4000
-_empty_bad_page_table:
+empty_bad_page_table:
 
 .org 0x5000
-_empty_zero_page:
+empty_zero_page:
 
 .org 0x6000
 /*
@@ -280,7 +280,7 @@ _empty_zero_page:
  * reach to a buffer-block. It needs to be aligned, so that it isn't
  * on a 64kB border.
  */
-_tmp_floppy_area:
+tmp_floppy_area:
 	.fill 1024,1,0
 /*
  * floppy_track_buffer is used to buffer one track of floppy data: it
@@ -288,7 +288,7 @@ _tmp_floppy_area:
  * sector read/write can mess it up. It can contain one full track of
  * data (18*2*512 bytes).
  */
-_floppy_track_buffer:
+floppy_track_buffer:
 	.fill 512*2*18,1,0
 
 /* This is the default interrupt "handler" :-) */
@@ -308,7 +308,7 @@ ignore_int:
 	mov %ax,%es
 	mov %ax,%fs
 	pushl $int_msg
-	call _printk
+	call printk
 	popl %eax
 	pop %fs
 	pop %es
@@ -325,24 +325,24 @@ ignore_int:
 .word 0
 idt_descr:
 	.word 256*8-1		# idt contains 256 entries
-	.long 0xc0000000+_idt
+	.long 0xc0000000+idt
 
 .align 4
-_idt:
+idt:
 	.fill 256,8,0		# idt is uninitialized
 
 .align 4
 .word 0
 gdt_descr:
 	.word (8+2*NR_TASKS)*8-1
-	.long 0xc0000000+_gdt
+	.long 0xc0000000+gdt
 
 /*
  * This gdt setup gives the kernel a 1GB address space at virtual
  * address 0xC0000000 - space enough for expansion, I hope.
  */
 .align 4
-_gdt:
+gdt:
 	.quad 0x0000000000000000	/* NULL descriptor */
 	.quad 0x0000000000000000	/* not used */
 	.quad 0xc0c39a000000ffff	/* 0x10 kernel 1GB code at 0xC0000000 */

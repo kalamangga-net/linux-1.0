@@ -111,10 +111,12 @@ typedef struct fd_set {
 
 #undef	__FD_ZERO
 #define __FD_ZERO(fdsetp) \
-		__asm__ __volatile__("cld ; rep ; stosl" \
+		__asm__ __volatile__("push %%ecx; push %%edi ;" \
+                        "cld ; rep ; stosl" \
+                        "; pop %%edi; pop %%ecx" \
 			:"=m" (*(fd_set *) (fdsetp)) \
 			:"a" (0), "c" (__FDSET_LONGS), \
-			"D" ((fd_set *) (fdsetp)) :"cx","di")
+			"D" ((fd_set *) (fdsetp)) :)
 
 struct ustat {
 	daddr_t f_tfree;

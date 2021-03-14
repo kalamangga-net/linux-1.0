@@ -21,6 +21,7 @@
 #include <linux/ptrace.h>
 #include <linux/malloc.h>
 #include <linux/ldt.h>
+#include <linux/string.h>
 
 #include <asm/segment.h>
 #include <asm/system.h>

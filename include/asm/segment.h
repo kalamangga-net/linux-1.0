@@ -54,7 +54,8 @@ __asm__ ("movl %0,%%fs:%1": /* no outputs */ :"ir" (val),"m" (*addr));
 
 static inline void __generic_memcpy_tofs(void * to, const void * from, unsigned long n)
 {
-__asm__("cld\n\t"
+__asm__("push %%ecx ; push %%edi; push %%esi ;"
+        "cld\n\t"
 	"push %%es\n\t"
 	"push %%fs\n\t"
 	"pop %%es\n\t"
@@ -67,9 +68,10 @@ __asm__("cld\n\t"
 	"2:\tshrl $2,%%ecx\n\t"
 	"rep ; movsl\n\t"
 	"pop %%es"
+        " ; pop %%esi ; pop %%edi ; pop %%ecx"
 	: /* no outputs */
 	:"c" (n),"D" ((long) to),"S" ((long) from)
-	:"cx","di","si");
+	:);
 }
 
 static inline void __constant_memcpy_tofs(void * to, const void * from, unsigned long n)
@@ -92,16 +94,18 @@ static inline void __constant_memcpy_tofs(void * to, const void * from, unsigned
 			return;
 	}
 #define COMMON(x) \
-__asm__("cld\n\t" \
+__asm__("push %%ecx; push %%edi ; push %%esi ;" \
+        "cld\n\t" \
 	"push %%es\n\t" \
 	"push %%fs\n\t" \
 	"pop %%es\n\t" \
 	"rep ; movsl\n\t" \
 	x \
 	"pop %%es" \
+        "; pop %%esi ; pop %%edi; pop %%ecx" \
 	: /* no outputs */ \
 	:"c" (n/4),"D" ((long) to),"S" ((long) from) \
-	:"cx","di","si")
+	:)
 
 	switch (n % 4) {
 		case 0:
@@ -122,7 +126,8 @@ __asm__("cld\n\t" \
 
 static inline void __generic_memcpy_fromfs(void * to, const void * from, unsigned long n)
 {
-__asm__("cld\n\t"
+__asm__("push %%ecx ; push %%edi ; push %%esi ;"
+        "cld\n\t"
 	"testb $1,%%cl\n\t"
 	"je 1f\n\t"
 	"fs ; movsb\n"
@@ -131,9 +136,10 @@ __asm__("cld\n\t"
 	"fs ; movsw\n"
 	"2:\tshrl $2,%%ecx\n\t"
 	"rep ; fs ; movsl"
+        "; pop %%esi ; pop %%edi ; pop %%ecx"
 	: /* no outputs */
 	:"c" (n),"D" ((long) to),"S" ((long) from)
-	:"cx","di","si","memory");
+	:"memory");
 }
 
 static inline void __constant_memcpy_fromfs(void * to, const void * from, unsigned long n)
@@ -156,12 +162,14 @@ static inline void __constant_memcpy_fromfs(void * to, const void * from, unsign
 			return;
 	}
 #define COMMON(x) \
-__asm__("cld\n\t" \
+__asm__("push %%ecx ; push %%edi ; push %%esi ;" \
+        "cld\n\t" \
 	"rep ; fs ; movsl\n\t" \
 	x \
+        "; pop %%esi ; pop %%edi ; pop %%ecx" \
 	: /* no outputs */ \
 	:"c" (n/4),"D" ((long) to),"S" ((long) from) \
-	:"cx","di","si","memory")
+	:"memory")
 
 	switch (n % 4) {
 		case 0:

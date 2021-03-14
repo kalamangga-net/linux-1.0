@@ -429,10 +429,12 @@ int floppy_change(struct buffer_head * bh)
 }
 
 #define copy_buffer(from,to) \
-__asm__("cld ; rep ; movsl" \
+__asm__("push %%ecx ; push %%edi ; push %%esi;"  \
+        "cld ; rep ; movsl" \
+        ";pop %%esi ; pop %%edi ; pop %%ecx"\
 	: \
 	:"c" (BLOCK_SIZE/4),"S" ((long)(from)),"D" ((long)(to)) \
-	:"cx","di","si")
+	:)
 
 static void setup_DMA(void)
 {

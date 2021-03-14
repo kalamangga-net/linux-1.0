@@ -572,7 +572,7 @@ int aha152x_detect(int hostno)
 #if defined(DEBUG_RACE)
           leave_driver("(1) detect");
 #endif
-          printk("failed\n");
+          printk("aha152x: failed\n");
           return 0;
         }
       printk("aha152x: BIOS test: passed, ");
@@ -587,7 +587,7 @@ int aha152x_detect(int hostno)
 
       if(i==PORT_COUNT)
         {
-          printk("failed\n");
+          printk("aha152x: failed\n");
 #if defined(DEBUG_RACE)
           leave_driver("(2) detect");
 #endif

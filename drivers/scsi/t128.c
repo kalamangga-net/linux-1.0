@@ -116,7 +116,7 @@
 #define AUTOPROBE_IRQ
 #include "NCR5380.h"
 #include "constants.h"
-
+#include <linux/string.h>
 
 
 

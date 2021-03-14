@@ -15,7 +15,7 @@
  * I changed all the .align's to 4 (16 byte alignment), as that's faster
  * on a 486.
  *
- * Stack layout in 'ret_from_system_call':
+ * Stack layout in 'ret_fromsystem_call':
  * 	ptrace needs to have all regs on the stack.
  *	if the order here is changed, it needs to be 
  *	updated in fork.c:copy_process, signal.c:do_signal,
@@ -80,13 +80,13 @@ dbgreg7		= 56
 
 ENOSYS = 38
 
-.globl _system_call,_lcall7
-.globl _device_not_available, _coprocessor_error
-.globl _divide_error,_debug,_nmi,_int3,_overflow,_bounds,_invalid_op
-.globl _double_fault,_coprocessor_segment_overrun
-.globl _invalid_TSS,_segment_not_present,_stack_segment
-.globl _general_protection,_reserved
-.globl _alignment_check,_page_fault
+.globl system_call,lcall7
+.globl device_not_available, coprocessor_error
+.globl divide_error,debug,nmi,int3,overflow,bounds,invalid_op
+.globl double_fault,coprocessor_segment_overrun
+.globl invalid_TSS,segment_not_present,stack_segment
+.globl general_protection,reserved
+.globl alignment_check,page_fault
 .globl ret_from_sys_call
 
 #define SAVE_ALL \
@@ -111,7 +111,7 @@ ENOSYS = 38
 #define RESTORE_ALL \
 	cmpw $(KERNEL_CS),CS(%esp); \
 	je 1f;   \
-	movl _current,%eax; \
+	movl current,%eax; \
 	movl dbgreg7(%eax),%ebx; \
 	movl %ebx,%db7;	\
 1:	popl %ebx; \
@@ -129,7 +129,7 @@ ENOSYS = 38
 	iret
 
 .align 4
-_lcall7:
+lcall7:
 	pushfl			# We get a different stack layout with call gates,
 	pushl %eax		# which has to be cleaned up later..
 	SAVE_ALL
@@ -141,38 +141,38 @@ _lcall7:
 	movl %ecx,CS(%esp)	#
 	movl %esp,%eax
 	pushl %eax
-	call _iABI_emulate
+	call iABI_emulate
 	popl %eax
 	jmp ret_from_sys_call
 
 .align 4
 handle_bottom_half:
 	pushfl
-	incl _intr_count
+	incl intr_count
 	sti
-	call _do_bottom_half
+	call do_bottom_half
 	popfl
-	decl _intr_count
+	decl intr_count
 	jmp 9f
 .align 4
 reschedule:
 	pushl $ret_from_sys_call
-	jmp _schedule
+	jmp schedule
 .align 4
-_system_call:
+system_call:
 	pushl %eax			# save orig_eax
 	SAVE_ALL
 	movl $-ENOSYS,EAX(%esp)
-	cmpl _NR_syscalls,%eax
+	cmpl NR_syscalls,%eax
 	jae ret_from_sys_call
-	movl _current,%ebx
+	movl current,%ebx
 	andl $~CF_MASK,EFLAGS(%esp)	# clear carry - assume no errors
 	movl $0,errno(%ebx)
 	movl %db6,%edx
 	movl %edx,dbgreg6(%ebx)  # save current hardware debugging status
 	testb $0x20,flags(%ebx)		# PF_TRACESYS
 	jne 1f
-	call _sys_call_table(,%eax,4)
+	call sys_call_table(,%eax,4)
 	movl %eax,EAX(%esp)		# save the return value
 	movl errno(%ebx),%edx
 	negl %edx
@@ -181,24 +181,24 @@ _system_call:
 	orl $(CF_MASK),EFLAGS(%esp)	# set carry to indicate error
 	jmp ret_from_sys_call
 .align 4
-1:	call _syscall_trace
+1:	call syscall_trace
 	movl ORIG_EAX(%esp),%eax
-	call _sys_call_table(,%eax,4)
+	call sys_call_table(,%eax,4)
 	movl %eax,EAX(%esp)		# save the return value
-	movl _current,%eax
+	movl current,%eax
 	movl errno(%eax),%edx
 	negl %edx
 	je 1f
 	movl %edx,EAX(%esp)
 	orl $(CF_MASK),EFLAGS(%esp)	# set carry to indicate error
-1:	call _syscall_trace
+1:	call syscall_trace
 
 	.align 4,0x90
 ret_from_sys_call:
-	cmpl $0,_intr_count
+	cmpl $0,intr_count
 	jne 2f
-	movl _bh_mask,%eax
-	andl _bh_active,%eax
+	movl bh_mask,%eax
+	andl bh_active,%eax
 	jne handle_bottom_half
 9:	movl EFLAGS(%esp),%eax		# check VM86 flag: CS/SS are
 	testl $(VM_MASK),%eax		# different then
@@ -209,10 +209,10 @@ ret_from_sys_call:
 	orl $(IF_MASK),%eax		# these just try to make sure
 	andl $~NT_MASK,%eax		# the program doesn't do anything
 	movl %eax,EFLAGS(%esp)		# stupid
-	cmpl $0,_need_resched
+	cmpl $0,need_resched
 	jne reschedule
-	movl _current,%eax
-	cmpl _task,%eax			# task[0] cannot have signals
+	movl current,%eax
+	cmpl task,%eax			# task[0] cannot have signals
 	je 2f
 	cmpl $0,state(%eax)		# state
 	jne reschedule
@@ -231,25 +231,25 @@ signal_return:
 	testl $(VM_MASK),EFLAGS(%ecx)
 	jne v86_signal_return
 	pushl %ebx
-	call _do_signal
+	call do_signal
 	popl %ebx
 	popl %ebx
 	RESTORE_ALL
 .align 4
 v86_signal_return:
-	call _save_v86_state
+	call save_v86_state
 	movl %eax,%esp
 	pushl %eax
 	pushl %ebx
-	call _do_signal
+	call do_signal
 	popl %ebx
 	popl %ebx
 	RESTORE_ALL
 
 .align 4
-_divide_error:
+divide_error:
 	pushl $0		# no error code
-	pushl $_do_divide_error
+	pushl $do_divide_error
 .align 4,0x90
 error_code:
 	push %fs
@@ -279,7 +279,7 @@ error_code:
 	movl $(USER_DS),%edx
 	mov %dx,%fs
 	pushl %eax
-	movl _current,%eax
+	movl current,%eax
 	movl %db6,%edx
 	movl %edx,dbgreg6(%eax)  # save current hardware debugging status
 	popl %eax
@@ -288,103 +288,103 @@ error_code:
 	jmp ret_from_sys_call
 
 .align 4
-_coprocessor_error:
+coprocessor_error:
 	pushl $0
-	pushl $_do_coprocessor_error
+	pushl $do_coprocessor_error
 	jmp error_code
 
 .align 4
-_device_not_available:
+device_not_available:
 	pushl $-1		# mark this as an int
 	SAVE_ALL
 	pushl $ret_from_sys_call
 	movl %cr0,%eax
 	testl $0x4,%eax			# EM (math emulation bit)
-	je _math_state_restore
+	je math_state_restore
 	pushl $0		# temporary storage for ORIG_EIP
-	call _math_emulate
+	call math_emulate
 	addl $4,%esp
 	ret
 
 .align 4
-_debug:
+debug:
 	pushl $0
-	pushl $_do_debug
+	pushl $do_debug
 	jmp error_code
 
 .align 4
-_nmi:
+nmi:
 	pushl $0
-	pushl $_do_nmi
+	pushl $do_nmi
 	jmp error_code
 
 .align 4
-_int3:
+int3:
 	pushl $0
-	pushl $_do_int3
+	pushl $do_int3
 	jmp error_code
 
 .align 4
-_overflow:
+overflow:
 	pushl $0
-	pushl $_do_overflow
+	pushl $do_overflow
 	jmp error_code
 
 .align 4
-_bounds:
+bounds:
 	pushl $0
-	pushl $_do_bounds
+	pushl $do_bounds
 	jmp error_code
 
 .align 4
-_invalid_op:
+invalid_op:
 	pushl $0
-	pushl $_do_invalid_op
+	pushl $do_invalid_op
 	jmp error_code
 
 .align 4
-_coprocessor_segment_overrun:
+coprocessor_segment_overrun:
 	pushl $0
-	pushl $_do_coprocessor_segment_overrun
+	pushl $do_coprocessor_segment_overrun
 	jmp error_code
 
 .align 4
-_reserved:
+reserved:
 	pushl $0
-	pushl $_do_reserved
+	pushl $do_reserved
 	jmp error_code
 
 .align 4
-_double_fault:
-	pushl $_do_double_fault
+double_fault:
+	pushl $do_double_fault
 	jmp error_code
 
 .align 4
-_invalid_TSS:
-	pushl $_do_invalid_TSS
+invalid_TSS:
+	pushl $do_invalid_TSS
 	jmp error_code
 
 .align 4
-_segment_not_present:
-	pushl $_do_segment_not_present
+segment_not_present:
+	pushl $do_segment_not_present
 	jmp error_code
 
 .align 4
-_stack_segment:
-	pushl $_do_stack_segment
+stack_segment:
+	pushl $do_stack_segment
 	jmp error_code
 
 .align 4
-_general_protection:
-	pushl $_do_general_protection
+general_protection:
+	pushl $do_general_protection
 	jmp error_code
 
 .align 4
-_alignment_check:
-	pushl $_do_alignment_check
+alignment_check:
+	pushl $do_alignment_check
 	jmp error_code
 
 .align 4
-_page_fault:
-	pushl $_do_page_fault
+page_fault:
+	pushl $do_page_fault
 	jmp error_code

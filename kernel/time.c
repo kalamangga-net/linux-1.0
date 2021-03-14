@@ -30,7 +30,7 @@
 #define RTC_ALWAYS_BCD 1
 
 #include <linux/timex.h>
-extern struct timeval xtime;
+extern volatile struct timeval xtime;
 
 #include <linux/mktime.h>
 extern long kernel_mktime(struct mktime * time);

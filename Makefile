@@ -35,7 +35,7 @@ endif
 # the default of FLOPPY is used by 'build'.
 #
 
-ROOT_DEV = CURRENT
+ROOT_DEV = -DROOT_DEV=0x0000 # default
 
 #
 # If you want to preset the SVGA mode, uncomment the next line and
@@ -50,16 +50,20 @@ SVGA_MODE=	-DSVGA_MODE=NORMAL_VGA
 # standard CFLAGS
 #
 
-CFLAGS = -Wall -Wstrict-prototypes -O2 -fomit-frame-pointer -pipe
+CFLAGS = -Wall -Wstrict-prototypes -O2  -fomit-frame-pointer -pipe \
+         -w -m32 -I$(PWD)/include/ -std=gnu89 \
+	 -fno-stack-protector -fno-builtin -mmanual-endbr \
+	 -fno-reorder-blocks-and-partition -fno-pie
+#-Wno-attribute-alias
 
 ifdef CONFIG_CPP
 CFLAGS := $(CFLAGS) -x c++
 endif
 
 ifdef CONFIG_M486
-CFLAGS := $(CFLAGS) -m486
+#CFLAGS := $(CFLAGS) -m486
 else
-CFLAGS := $(CFLAGS) -m386
+#CFLAGS := $(CFLAGS) -m386
 endif
 
 #
@@ -67,20 +71,20 @@ endif
 # size in blocks.
 #
 
-#RAMDISK = -DRAMDISK=512
+RAMDISK = -DRAMDISK=512
 
-AS86	=i686-linux-gnu-as -0 -a
-LD86	=i686-linux-gnu-ld -0
+AS86	=as86 -0 -a
+LD86	=ld86 -0
 
-AS	=i686-linux-gnu-as
-LD	=i686-linux-gnu-ld
+AS	=as --32
+LD	=ld -m elf_i386
 LDFLAGS	=#-qmagic
-HOSTCC	=gcc-4.8
-CC	=gcc-4.8 -D__KERNEL__
+HOSTCC	=gcc 
+CC	=gcc -D__KERNEL__  
 MAKE	=make
-CPP	=$(CC) -E
-AR	=i686-linux-gnu-ar
-STRIP	=i686-linux-gnu-strip
+CPP	=$(CC) -E -I$(PWD)/include/
+AR	=ar
+STRIP	=strip
 
 ARCHIVES	=kernel/kernel.o mm/mm.o fs/fs.o net/net.o ipc/ipc.o
 FILESYSTEMS	=fs/filesystems.a
@@ -149,6 +153,7 @@ tools/version.o: tools/version.c tools/version.h
 init/main.o: $(CONFIGURE) init/main.c
 	$(CC) $(CFLAGS) $(PROFILING) -c -o $*.o $<
 
+#non-compressed kernel
 tools/system:	boot/head.o init/main.o tools/version.o linuxsubdirs
 	$(LD) $(LDFLAGS) -Ttext 1000 boot/head.o init/main.o tools/version.o \
 		$(ARCHIVES) \
@@ -175,13 +180,24 @@ boot/bootsect.o: boot/bootsect.s
 	$(AS86) -o $@ $<
 
 boot/bootsect.s: boot/bootsect.S $(CONFIGURE) include/linux/config.h Makefile
-	$(CPP) -traditional $(SVGA_MODE) $(RAMDISK) $< -o $@
+	$(CPP) -traditional $(SVGA_MODE) $(RAMDISK) $(ROOT_DEV) $< -o $@
 
 zBoot/zSystem: zBoot/*.c zBoot/*.S tools/zSystem
 	$(MAKE) -C zBoot
 
 zImage: $(CONFIGURE) boot/bootsect boot/setup zBoot/zSystem tools/build
-	tools/build boot/bootsect boot/setup zBoot/zSystem $(ROOT_DEV) > zImage
+	#tools/build boot/bootsect boot/setup zBoot/zSystem $(ROOT_DEV) > zImage
+	dd if=boot/bootsect skip=32 bs=1 of=bootsect.bin
+	dd if=boot/setup skip=32 bs=1 of=setup.bin
+	cat bootsect.bin setup.bin > zImage
+	sync
+	truncate -s 2560 zImage
+	sync
+	objcopy -O binary -j.text zBoot/zSystem zSystem.bin
+	sync
+	cat zSystem.bin >> zImage
+	sync
+	truncate -s 1474560 zImage
 	sync
 
 zdisk: zImage
@@ -194,8 +210,9 @@ zlilo: $(CONFIGURE) zImage
 	cp zSystem.map /
 	if [ -x /sbin/lilo ]; then /sbin/lilo; else /etc/lilo/install; fi
 
+#compressed kernel
 tools/zSystem:	boot/head.o init/main.o tools/version.o linuxsubdirs
-	$(LD) $(LDFLAGS) -Ttext 100000 boot/head.o init/main.o tools/version.o \
+	$(LD) $(LDFLAGS) -T script.ld boot/head.o init/main.o tools/version.o \
 		$(ARCHIVES) \
 		$(FILESYSTEMS) \
 		$(DRIVERS) \
@@ -234,6 +251,12 @@ clean:
 	rm -f zBoot/zSystem zBoot/xtract zBoot/piggyback
 	rm -f .tmp* drivers/sound/configure
 	rm -f init/*.o tools/build boot/*.o tools/*.o
+	rm -f zBoot/a.out.gz
+	rm -f zBoot/a.out
+	rm -f zSystem.bin
+	rm -f zImage.img
+	rm -f setup.bin
+	rm -f bootsect.bin
 
 mrproper: clean
 	rm -f include/linux/autoconf.h tools/version.h

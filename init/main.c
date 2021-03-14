@@ -236,12 +236,14 @@ static void calibrate_delay(void)
 		__delay(loops_per_sec);
 		ticks = jiffies - ticks;
 		if (ticks >= HZ) {
-			__asm__("mull %1 ; divl %2"
+			__asm__("push %%edx;"
+                                "mull %1 ; divl %2"
+                                "; pop %%edx"
 				:"=a" (loops_per_sec)
 				:"d" (HZ),
 				 "r" (ticks),
 				 "0" (loops_per_sec)
-				:"dx");
+				:);
 			printk("ok - %lu.%02lu BogoMips\n",
 				loops_per_sec/500000,
 				(loops_per_sec/5000) % 100);

@@ -430,45 +430,51 @@ static void scrup(int currcons, unsigned int t, unsigned int b)
 		pos += video_size_row;
 		scr_end += video_size_row;
 		if (scr_end > video_mem_end) {
-			__asm__("cld\n\t"
+			__asm__("push %%ecx ; push %%edi ; push %%esi ;"
+                                "cld\n\t"
 				"rep\n\t"
 				"movsl\n\t"
-				"movl _video_num_columns,%1\n\t"
+				"movl video_num_columns,%1\n\t"
 				"rep\n\t"
-				"stosw"
+				"stosw" 
+                                ";pop %%esi ; pop %%edi ; pop %%ecx"
 				: /* no output */
 				:"a" (video_erase_char),
 				"c" ((video_num_lines-1)*video_num_columns>>1),
 				"D" (video_mem_start),
 				"S" (origin)
-				:"cx","di","si");
+				:);
 			scr_end -= origin-video_mem_start;
 			pos -= origin-video_mem_start;
 			origin = video_mem_start;
 		} else {
-			__asm__("cld\n\t"
+			__asm__("push %%ecx ; push %%edi ;"
+                                "cld\n\t"
 				"rep\n\t"
 				"stosw"
+                                "; pop %%edi ; pop %%ecx"
 				: /* no output */
 				:"a" (video_erase_char),
 				"c" (video_num_columns),
 				"D" (scr_end-video_size_row)
-				:"cx","di");
+				:);
 		}
 		set_origin(currcons);
 	} else {
-		__asm__("cld\n\t"
+		__asm__("push %%ecx ; push %%edi ; push %%esi ;"
+                        "cld\n\t"
 			"rep\n\t"
 			"movsl\n\t"
-			"movl _video_num_columns,%%ecx\n\t"
+			"movl video_num_columns,%%ecx\n\t"
 			"rep\n\t"
 			"stosw"
+                        "; pop %%esi ; pop %%edi ; pop %%ecx "
 			: /* no output */
 			:"a" (video_erase_char),
 			"c" ((b-t-1)*video_num_columns>>1),
 			"D" (origin+video_size_row*t),
 			"S" (origin+video_size_row*(t+1))
-			:"cx","di","si");
+			:);
 	}
 }
 
@@ -476,20 +482,22 @@ static void scrdown(int currcons, unsigned int t, unsigned int b)
 {
 	if (b > video_num_lines || t >= b)
 		return;
-	__asm__("std\n\t"
+	__asm__("push %%ecx ; push %%edi ; push %%esi ;"
+                "std\n\t"
 		"rep\n\t"
 		"movsl\n\t"
 		"addl $2,%%edi\n\t"	/* %edi has been decremented by 4 */
-		"movl _video_num_columns,%%ecx\n\t"
+		"movl video_num_columns,%%ecx\n\t"
 		"rep\n\t"
 		"stosw\n\t"
 		"cld"
+                "; pop %%esi ; pop %%edi ; pop %%ecx "
 		: /* no output */
 		:"a" (video_erase_char),
 		"c" ((b-t-1)*video_num_columns>>1),
 		"D" (origin+video_size_row*b-4),
 		"S" (origin+video_size_row*(b-1)-4)
-		:"ax","cx","di","si");
+		:);
 }
 
 static void lf(int currcons)
@@ -564,13 +572,15 @@ static void csi_J(int currcons, int vpar)
 		default:
 			return;
 	}
-	__asm__("cld\n\t"
+	__asm__("push %%ecx ; push %%edi ;"
+                "cld\n\t"
 		"rep\n\t"
 		"stosw\n\t"
+                "; pop %%edi ; pop %%ecx"
 		: /* no output */
 		:"c" (count),
 		"D" (start),"a" (video_erase_char)
-		:"cx","di");
+		:);
 	need_wrap = 0;
 }
 
@@ -595,13 +605,15 @@ static void csi_K(int currcons, int vpar)
 		default:
 			return;
 	}
-	__asm__("cld\n\t"
+	__asm__("push %%ecx ; push %%edi ;"
+                "cld\n\t"
 		"rep\n\t"
 		"stosw\n\t"
+                "pop %%edi ; pop %%ecx ;"
 		: /* no output */
 		:"c" (count),
 		"D" (start),"a" (video_erase_char)
-		:"cx","di");
+		:);
 	need_wrap = 0;
 }
 
@@ -1332,12 +1344,14 @@ void do_keyboard_interrupt(void)
 
 void * memsetw(void * s,unsigned short c,int count)
 {
-__asm__("cld\n\t"
+__asm__("push %%ecx ; push %%edi ;"
+        "cld\n\t"
 	"rep\n\t"
 	"stosw"
+        "; pop %%edi ; pop %%ecx"
 	: /* no output */
 	:"a" (c),"D" (s),"c" (count)
-	:"cx","di");
+	:);
 return s;
 }
 

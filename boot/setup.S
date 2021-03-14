@@ -41,9 +41,9 @@ begbss:
 
 entry start
 start:
-
 ! ok, the read went well so we get current cursor position and save it for
 ! posterity.
+
 
 	mov	ax,#INITSEG	! this is done in bootsect already, but...
 	mov	ds,ax
@@ -59,6 +59,7 @@ start:
 	mov	ax,#0x0305
 	xor	bx,bx		! clear bx
 	int	0x16
+
 
 ! check for EGA/VGA and some config parameters
 
@@ -84,12 +85,15 @@ novga:	mov	[14],ax
 	int	0x10		! save it in known place, con_init fetches
 	mov	[0],dx		! it from 0x90000.
 	
+
 ! Get video-card data:
 	
 	mov	ah,#0x0f
 	int	0x10
 	mov	[4],bx		! bh = display page
 	mov	[6],ax		! al = video mode, ah = window width
+
+
 
 ! Get hd0 data
 
@@ -157,6 +161,7 @@ no_psmouse:
 	mov	ax,#0x100	! start of destination segment
 	mov	bx,#0x1000	! start of source segment
 	cld			! 'direction'=0, movs moves forward
+
 do_move:
 	mov	es,ax		! destination segment
 	add	ax,#0x100
@@ -205,6 +210,7 @@ end_move:
 ! which is used for the internal hardware interrupts as well. We just
 ! have to reprogram the 8259's, and it isn't fun.
 
+
 	mov	al,#0x11		! initialization sequence
 	out	#0x20,al		! send it to 8259A-1
 	call	delay
@@ -246,8 +252,10 @@ end_move:
 ! Note that the short jump isn't strictly needed, althought there are
 ! reasons why it might be a good idea. It won't hurt in any case.
 !
+
 	mov	ax,#0x0001	! protected mode (PE) bit
 	lmsw	ax		! This is it!
+
 	jmp	flush_instr
 flush_instr:
 	jmpi	0x1000,KERNEL_CS	! jmp offset 1000 of segment 0x10 (cs)
@@ -776,15 +784,19 @@ beep:	mov	al,#0x07
 	jmp	prnt1
 	
 gdt:
+	; sector 0x00
 	.word	0,0,0,0		! dummy
 
+	; sector 0x08
 	.word	0,0,0,0		! unused
 
+	; sector 0x10 - CS
 	.word	0x07FF		! 8Mb - limit=2047 (2048*4096=8Mb)
 	.word	0x0000		! base address=0
 	.word	0x9A00		! code read/exec
 	.word	0x00C0		! granularity=4096, 386
 
+	; sector 0x18 - ?
 	.word	0x07FF		! 8Mb - limit=2047 (2048*4096=8Mb)
 	.word	0x0000		! base address=0
 	.word	0x9200		! data read/write

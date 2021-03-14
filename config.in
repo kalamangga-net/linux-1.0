@@ -5,22 +5,22 @@
 *
 * General setup
 *
-bool 'Kernel math emulation' CONFIG_MATH_EMULATION y
+bool 'Kernel math emulation' CONFIG_MATH_EMULATION n
 bool 'Normal harddisk support' CONFIG_BLK_DEV_HD y
 bool 'XT harddisk support' CONFIG_BLK_DEV_XD n
 bool 'TCP/IP networking' CONFIG_INET y
 bool 'Limit memory to low 16MB' CONFIG_MAX_16M n
-bool 'System V IPC' CONFIG_SYSVIPC y
-bool 'Use -m486 flag for 486-specific optimizations' CONFIG_M486 y
+bool 'System V IPC' CONFIG_SYSVIPC n
+bool 'Use -m486 flag for 486-specific optimizations' CONFIG_M486 n
 *
 * Program binary formats
 *
 bool 'Elf executables' CONFIG_BINFMT_ELF y
-bool 'COFF executables' CONFIG_BINFMT_COFF y
+bool 'COFF executables' CONFIG_BINFMT_COFF n
 *
 * SCSI support
 *
-bool 'SCSI support?' CONFIG_SCSI n
+bool 'SCSI support?' CONFIG_SCSI y
 if [ "$CONFIG_SCSI" = "n" ]
 :
 : Skipping SCSI configuration options...
@@ -30,7 +30,7 @@ else
 	* SCSI support type (disk, tape, CDrom)
 	*
 bool 'Scsi disk support' CONFIG_BLK_DEV_SD y
-bool 'Scsi tape support' CONFIG_CHR_DEV_ST y
+bool 'Scsi tape support' CONFIG_CHR_DEV_ST n
 bool 'Scsi CDROM support' CONFIG_BLK_DEV_SR y
 bool 'Scsi generic support' CONFIG_CHR_DEV_SG y
 	*
@@ -63,8 +63,8 @@ if [ "$CONFIG_SLIP" = "y" ]
 fi
 #bool 'PPP (point-to-point) support' CONFIG_PPP n
 bool 'PLIP (parallel port) support' CONFIG_PLIP n
-bool 'NE2000/NE1000 support' CONFIG_NE2000 n
-bool 'WD80*3 support' CONFIG_WD80x3 y
+bool 'NE2000/NE1000 support' CONFIG_NE2000 y
+bool 'WD80*3 support' CONFIG_WD80x3 n
 bool 'SMC Ultra support' CONFIG_ULTRA n
 bool '3c501 support' CONFIG_EL1 n
 bool '3c503 support' CONFIG_EL2 n
@@ -91,13 +91,13 @@ bool 'Matsushita/Panasonic CDROM driver support' CONFIG_SBPCD n
 *
 * Filesystems
 *
-bool 'Standard (minix) fs support' CONFIG_MINIX_FS y
+bool 'Standard (minix) fs support' CONFIG_MINIX_FS n
 bool 'Extended fs support' CONFIG_EXT_FS n
 bool 'Second extended fs support' CONFIG_EXT2_FS y
 bool 'xiafs filesystem support' CONFIG_XIA_FS n
 bool 'msdos fs support' CONFIG_MSDOS_FS y
 bool '/proc filesystem support' CONFIG_PROC_FS y
-bool 'NFS filesystem support' CONFIG_NFS_FS y
+bool 'NFS filesystem support' CONFIG_NFS_FS n
 bool 'ISO9660 cdrom filesystem support' CONFIG_ISO9660_FS n
 bool 'OS/2 HPFS filesystem support (read only)' CONFIG_HPFS_FS n
 bool 'System V and Coherent filesystem support' CONFIG_SYSV_FS n
@@ -106,7 +106,7 @@ bool 'System V and Coherent filesystem support' CONFIG_SYSV_FS n
 *
 bool 'Parallel printer support' CONFIG_PRINTER n
 bool 'Logitech busmouse support' CONFIG_BUSMOUSE n
-bool 'PS/2 mouse (aka "auxiliary device") support' CONFIG_PSMOUSE y
+bool 'PS/2 mouse (aka "auxiliary device") support' CONFIG_PSMOUSE n
 if [ "$CONFIG_PSMOUSE" = "y" ]
 bool 'C&T 82C710 mouse port support (as on TI Travelmate)' CONFIG_82C710_MOUSE y
 fi

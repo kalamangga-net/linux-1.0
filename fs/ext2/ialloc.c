@@ -39,23 +39,24 @@ static inline int find_first_zero_bit (unsigned long * addr, unsigned size)
 
 	if (!size)
 		return 0;
-	__asm__("
-		cld
-		movl $-1,%%eax
-		repe; scasl
-		je 1f
-		subl $4,%%edi
-		movl (%%edi),%%eax
-		notl %%eax
-		bsfl %%eax,%%edx
-		jmp 2f
-1:		xorl %%edx,%%edx
-2:		subl %%ebx,%%edi
-		shll $3,%%edi
-		addl %%edi,%%edx"
+	__asm__("push %%ebx ; push %%ecx; push %%edi ;"
+		"cld\t\n"
+		"movl $-1,%%eax\t\n"
+		"repe; scasl\t\n"
+		"je 1f\t\n"
+		"subl $4,%%edi\t\n"
+		"movl (%%edi),%%eax\t\n"
+		"notl %%eax\t\n"
+		"bsfl %%eax,%%edx\t\n"
+		"jmp 2f\t\n"
+		"1:\txorl %%edx,%%edx\t\n"
+		"2:\tsubl %%ebx,%%edi\t\n"
+		"shll $3,%%edi\t\n"
+		"addl %%edi,%%edx"
+                "; pop %%edi ; pop %%ecx ; pop %%ebx"
 		: "=d" (res)
 		: "c" ((size + 31) >> 5), "D" (addr), "b" (addr)
-		: "ax", "bx", "cx", "di");
+		: "ax");
 	return res;
 }
 

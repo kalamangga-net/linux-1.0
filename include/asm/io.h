@@ -25,6 +25,7 @@
  *		Linus
  */
 
+
 #ifdef SLOW_IO_BY_JUMPING
 #define __SLOW_DOWN_IO __asm__ __volatile__("jmp 1f\n1:\tjmp 1f\n1:")
 #else
@@ -42,28 +43,28 @@
  */
 
 #define __OUT1(s,x) \
-extern inline void __out##s(unsigned x value, unsigned short port) {
+extern inline void __out##s(unsigned x value, const unsigned short port) {
 
 #define __OUT2(s,s1,s2) \
 __asm__ __volatile__ ("out" #s " %" s1 "0,%" s2 "1"
 
 #define __OUT(s,s1,x) \
 __OUT1(s,x) __OUT2(s,s1,"w") : : "a" (value), "d" (port)); } \
-__OUT1(s##c,x) __OUT2(s,s1,"") : : "a" (value), "i" (port)); } \
+__OUT1(s##c,x) __OUT2(s,s1,"") : : "a" (value), "d" (port)); } \
 __OUT1(s##_p,x) __OUT2(s,s1,"w") : : "a" (value), "d" (port)); SLOW_DOWN_IO; } \
-__OUT1(s##c_p,x) __OUT2(s,s1,"") : : "a" (value), "i" (port)); SLOW_DOWN_IO; }
+__OUT1(s##c_p,x) __OUT2(s,s1,"") : : "a" (value), "d" (port)); SLOW_DOWN_IO; }
 
 #define __IN1(s) \
-extern inline unsigned int __in##s(unsigned short port) { unsigned int _v;
+extern inline unsigned int __in##s(const unsigned short port) { unsigned int _v;
 
 #define __IN2(s,s1,s2) \
 __asm__ __volatile__ ("in" #s " %" s2 "1,%" s1 "0"
 
 #define __IN(s,s1,i...) \
 __IN1(s) __IN2(s,s1,"w") : "=a" (_v) : "d" (port) ,##i ); return _v; } \
-__IN1(s##c) __IN2(s,s1,"") : "=a" (_v) : "i" (port) ,##i ); return _v; } \
+__IN1(s##c) __IN2(s,s1,"") : "=a" (_v) : "d" (port) ,##i ); return _v; } \
 __IN1(s##_p) __IN2(s,s1,"w") : "=a" (_v) : "d" (port) ,##i ); SLOW_DOWN_IO; return _v; } \
-__IN1(s##c_p) __IN2(s,s1,"") : "=a" (_v) : "i" (port) ,##i ); SLOW_DOWN_IO; return _v; }
+__IN1(s##c_p) __IN2(s,s1,"") : "=a" (_v) : "d" (port) ,##i ); SLOW_DOWN_IO; return _v; }
 
 #define __INS(s) \
 extern inline void ins##s(unsigned short port, void * addr, unsigned long count) \

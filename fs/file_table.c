@@ -15,8 +15,10 @@ static void insert_file_free(struct file *file)
 {
 	file->f_next = first_file;
 	file->f_prev = first_file->f_prev;
-	file->f_next->f_prev = file;
-	file->f_prev->f_next = file;
+	if(file->f_next)
+		file->f_next->f_prev = file;
+	if(file->f_prev)
+		file->f_prev->f_next = file;
 	first_file = file;
 }
 
@@ -33,17 +35,25 @@ static void remove_file_free(struct file *file)
 
 static void put_last_free(struct file *file)
 {
-	remove_file_free(file);
-	file->f_prev = first_file->f_prev;
-	file->f_prev->f_next = file;
+	if(first_file)
+		file->f_prev = first_file->f_prev;
+	else
+		file->f_prev = NULL;
+	if(file->f_prev)
+		file->f_prev->f_next = file;
 	file->f_next = first_file;
-	file->f_next->f_prev = file;
+	if(file->f_next)
+		file->f_next->f_prev = file;
 }
 
 void grow_files(void)
 {
 	struct file * file;
 	int i;
+
+
+	if (nr_files >= NR_FILE)
+		return;
 
 	file = (struct file *) get_free_page(GFP_KERNEL);
 
@@ -73,7 +83,7 @@ struct file * get_empty_filp(void)
 	if (!first_file)
 		grow_files();
 repeat:
-	for (f = first_file, i=0; i < nr_files; i++, f = f->f_next)
+	for (f = first_file, i=0; i < nr_files && f; i++, f = f->f_next)
 		if (!f->f_count) {
 			remove_file_free(f);
 			memset(f,0,sizeof(*f));

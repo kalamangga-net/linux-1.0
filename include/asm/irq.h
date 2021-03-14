@@ -79,8 +79,8 @@ extern void enable_irq(unsigned int);
 	"inb $0x21,%al\n\t" \
 	"jmp 1f\n" \
 	"1:\tjmp 1f\n" \
-	"1:\torb $" #mask ",_cache_21\n\t" \
-	"movb _cache_21,%al\n\t" \
+	"1:\torb $" #mask ",cache_21\n\t" \
+	"movb cache_21,%al\n\t" \
 	"outb %al,$0x21\n\t" \
 	"jmp 1f\n" \
 	"1:\tjmp 1f\n" \
@@ -91,8 +91,8 @@ extern void enable_irq(unsigned int);
 	"inb $0xA1,%al\n\t" \
 	"jmp 1f\n" \
 	"1:\tjmp 1f\n" \
-	"1:\torb $" #mask ",_cache_A1\n\t" \
-	"movb _cache_A1,%al\n\t" \
+	"1:\torb $" #mask ",cache_A1\n\t" \
+	"movb cache_A1,%al\n\t" \
 	"outb %al,$0xA1\n\t" \
 	"jmp 1f\n" \
 	"1:\tjmp 1f\n" \
@@ -106,16 +106,16 @@ extern void enable_irq(unsigned int);
 	"inb $0x21,%al\n\t" \
 	"jmp 1f\n" \
 	"1:\tjmp 1f\n" \
-	"1:\tandb $~(" #mask "),_cache_21\n\t" \
-	"movb _cache_21,%al\n\t" \
+	"1:\tandb $~(" #mask "),cache_21\n\t" \
+	"movb cache_21,%al\n\t" \
 	"outb %al,$0x21\n\t"
 
 #define UNBLK_SECOND(mask) \
 	"inb $0xA1,%al\n\t" \
 	"jmp 1f\n" \
 	"1:\tjmp 1f\n" \
-	"1:\tandb $~(" #mask "),_cache_A1\n\t" \
-	"movb _cache_A1,%al\n\t" \
+	"1:\tandb $~(" #mask "),cache_A1\n\t" \
+	"movb cache_A1,%al\n\t" \
 	"outb %al,$0xA1\n\t"
 
 #define IRQ_NAME2(nr) nr##_interrupt(void)
@@ -129,35 +129,35 @@ asmlinkage void FAST_IRQ_NAME(nr); \
 asmlinkage void BAD_IRQ_NAME(nr); \
 __asm__( \
 "\n.align 4\n" \
-"_IRQ" #nr "_interrupt:\n\t" \
+"IRQ" #nr "_interrupt:\n\t" \
 	"pushl $-"#nr"-2\n\t" \
 	SAVE_ALL \
 	ACK_##chip(mask) \
-	"incl _intr_count\n\t"\
+	"incl intr_count\n\t"\
 	"sti\n\t" \
 	"movl %esp,%ebx\n\t" \
 	"pushl %ebx\n\t" \
 	"pushl $" #nr "\n\t" \
-	"call _do_IRQ\n\t" \
+	"call do_IRQ\n\t" \
 	"addl $8,%esp\n\t" \
 	"cli\n\t" \
 	UNBLK_##chip(mask) \
-	"decl _intr_count\n\t" \
+	"decl intr_count\n\t" \
 	"jmp ret_from_sys_call\n" \
 "\n.align 4\n" \
-"_fast_IRQ" #nr "_interrupt:\n\t" \
+"fast_IRQ" #nr "_interrupt:\n\t" \
 	SAVE_MOST \
 	ACK_##chip(mask) \
-	"incl _intr_count\n\t" \
+	"incl intr_count\n\t" \
 	"pushl $" #nr "\n\t" \
-	"call _do_fast_IRQ\n\t" \
+	"call do_fast_IRQ\n\t" \
 	"addl $4,%esp\n\t" \
 	"cli\n\t" \
 	UNBLK_##chip(mask) \
-	"decl _intr_count\n\t" \
+	"decl intr_count\n\t" \
 	RESTORE_MOST \
 "\n\n.align 4\n" \
-"_bad_IRQ" #nr "_interrupt:\n\t" \
+"bad_IRQ" #nr "_interrupt:\n\t" \
 	SAVE_MOST \
 	ACK_##chip(mask) \
 	RESTORE_MOST);
